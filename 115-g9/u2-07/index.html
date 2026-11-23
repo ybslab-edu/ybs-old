@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com/firebasejs/; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com; frame-src https://class-score-86020.firebaseapp.com; media-src 'self' data: blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>影片傳到群組變糊｜第 15 週</title>
+<link rel="icon" href="/ybs-old/assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@1,600;1,700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<link rel="stylesheet" href="../../assets/shell.css?v=20261116fb">
+<style>
+/* 沿用任務日誌的面板、表格與輸入欄；色彩只引用共用變數。 */
+.quest-note{border-left:3px solid var(--ember);padding:calc(var(--u)*2);background:var(--panel);margin-bottom:calc(var(--u)*2)}
+.quest-note p{margin:var(--u) 0}
+.quest-table{width:100%;border-collapse:collapse;table-layout:fixed}
+.quest-table th,.quest-table td{padding:var(--u);border:1px solid var(--edge);text-align:left;overflow-wrap:anywhere}
+.quest-table caption{text-align:left;font-weight:700;margin-block:var(--u)}
+.quest-chart{list-style:none;padding:0;display:grid;gap:var(--u)}
+.quest-chart li{display:grid;grid-template-columns:6em minmax(0,1fr) 3em;gap:var(--u);align-items:center}
+.quest-chart .track{height:1em;background:var(--panel-hi)}
+.quest-chart .bar{display:block;height:100%;background:var(--dim)}
+.quest-answers{display:grid;gap:calc(var(--u)*2);margin-top:calc(var(--u)*2)}
+.quest-answers label{display:grid;gap:var(--u);min-width:0}
+.quest-answers input,.quest-answers select{font:inherit;width:100%;min-width:0;min-height:44px;border:2px solid var(--edge);border-radius:0;background:var(--panel-hi);color:var(--text);padding:var(--u)}
+.quest-attach{border-top:1px solid var(--edge);padding-top:calc(var(--u)*2)}
+.quest-media{max-width:100%;height:auto;border:1px solid var(--edge)}
+.quest-source{white-space:pre-wrap;overflow-wrap:anywhere}
+@media(max-width:559px){
+.quest-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.quest-table tr{display:block;margin-bottom:var(--u);border:1px solid var(--edge)}
+.quest-table td{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:var(--u);border:0;border-bottom:1px solid var(--edge)}
+.quest-table td::before{content:attr(data-label);font-weight:700}
+}
+body :focus-visible{outline:3px solid var(--text);outline-offset:3px}
+</style>
+</head>
+<body>
+<script src="../../assets/teacher.js?v=20261031e"></script>
+<script src="../../assets/lock.js?v=20261120b1"></script>
+<script src="../../assets/fullrev-config.js?v=20261120a"></script>
+<script src="../../assets/login.js?v=20261121pr8"></script>
+<script src="../../assets/curriculum.js?v=20261110a"></script>
+<script src="../../assets/activities.js?v=20261122u205"></script>
+<script src="../../assets/shell.js?v=20261120a"></script>
+<script>
+const qEsc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const qTable=(caption,heads,rows)=>'<table class="quest-table"><caption>'+qEsc(caption)+'</caption><thead><tr>'+heads.map(h=>'<th scope="col">'+qEsc(h)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(row=>'<tr>'+row.map((x,k)=>'<td data-label="'+qEsc(heads[k])+'">'+qEsc(x)+'</td>').join('')+'</tr>').join('')+'</tbody></table>';
+const qVersion=rnd=>Math.floor(rnd()*8);
+const qCommon='<div class="quest-note"><p>你協助虛構音樂活動團隊整理素材。全部為示意資料，不填你或別人的真實個資。本組委託附件就在任務下方，所有作答都在 YBS 網站完成。</p><p>每關答對兩組不同資料才完成；答錯可修正，不扣分。答對後按「下一組」繼續。</p><p>既有紀錄如何對應：原燈牌解壓縮、燈牌壓縮、失真判斷、格式選擇的第 1～4 關紀錄，仍保留在相同索引；舊紀錄不代表做過新版題目。</p><p><strong>今天必做第 1、2 關；第 3、4 關另排時間完成。兩支影片 2-19（6:57）、2-20（8:26）都在課內完整播放。第 33 分開始獨立後測，停止教材、e 度與同儕協助。文字轉語音由影片與配對涵蓋。</strong></p></div>';
+function qView(inst,el,api,content,questions,expected,attachment){
+  el.innerHTML=qCommon+'<div class="panel"><h3>示意任務 '+qEsc(inst.t)+'</h3>'+content+
+    (attachment?'<div class="quest-attach"><h4>本組委託附件</h4>'+attachment+'</div>':'')+
+    '<div class="quest-answers">'+questions.map((q,k)=>'<label>'+qEsc(q.label)+(q.options?'<select data-answer="'+k+'" aria-label="'+qEsc(q.label)+'"><option value="">請選擇</option>'+q.options.map(x=>'<option value="'+qEsc(x)+'">'+qEsc(x)+'</option>').join('')+'</select>':'<input data-answer="'+k+'" type="'+(q.text?'text':'number')+'" '+(q.text?'':'min="0" step="1" inputmode="numeric"')+' aria-label="'+qEsc(q.label)+'">')+'</label>').join('')+'</div></div>';
+  const fields=questions.map((_,k)=>el.querySelector('[data-answer="'+k+'"]'));
+  fields.forEach(f=>{f.oninput=()=>api.changed();f.onchange=()=>api.changed()});
+  return {get:()=>fields.map(f=>f.value),ready:()=>fields.every(f=>f.value!==''),fill:()=>{expected.forEach((x,k)=>fields[k].value=String(x))}};
+}
+function qCheck(answer,expected,hints){
+  if(!Array.isArray(answer))return '請先填入成果答案，再送出。';
+  answer=answer.map(x=>typeof x==='string'?x.trim():x);
+  const wrong=expected.findIndex((x,k)=>answer[k]==null||String(answer[k]).trim()===''||(typeof x==='number'?(!/^\d+$/.test(String(answer[k]))||Number(answer[k])!==x):answer[k]!==x));
+  return wrong<0?true:hints[wrong];
+}
+const parseNums=s=>{const raw=String(s).trim();return /^\d+(?:[\s,，、]+\d+)*$/.test(raw)?raw.split(/[\s,，、]+/).map(Number):[]};
+const qKinds=['可編輯文字','校正後文字','可播放語音'];
+const qRun=b=>{const r=[0];let on=1;for(const x of b){if(x===on)r[r.length-1]++;else{r.push(1);on=x}}return r};
+function qBits(n){const patterns=['010101010101010101010101','000000000111111111111111','111111111111000000000000','101010101010101010101010','000000001111111111111111','111111111100000000000000','000000111111000000111111','000000011111111111111111'];return [...patterns[n]].map(Number)}
+function qExpected(i){
+ if(i.round===0)return [i.a+i.add+i.b,i.a+i.add,i.voice,...qKinds];
+ if(i.round===1){const size=qRun(i.encode).length*5;return [i.decode.join(''),qRun(i.encode).join(' '),size,size<24?'變小':size===24?'相同':'變大','可以逐顆完全還原']}
+ if(i.round===2)return [i.lines,i.kept,i.precise?'原圖':'壓縮圖',i.precise?'不能接受':'可以接受'];
+ return [i.files,i.capacity,i.code,'PNG','ZIP'];
+}
+const qNames=['今天必做：把公告變成能修改的文字','今天必做：壓得短，還原得回來嗎','另排時間完成：少掉的細節還能接受嗎','另排時間完成：把素材打包，保住該保留的內容'];
+const qGoals=['閱讀公告文字與模擬辨識句，依指定增加量計算名額，核對校正後內容與轉換配對。','還原完整亮暗排列，編寫另一個圖案的暗號，再比較位元大小。','放大比較同一指定區域的原圖與有損版本，以可辨識線段和用途判斷。','閱讀 ZIP 解壓後內容清單，查核檔案數、公告與完整標記，再選格式。'];
+const ROUNDS=qNames.map((name,round)=>({lv:round<2?1:2,name,now:'你要替虛構音樂活動團隊準備能修改、能傳送的素材。',goal:qGoals[round],tip:'先檢查素材版本與指定區域，再核對全部內容；不要只看檔案大小。',steps:i=>'<ol><li>你閱讀任務 '+i.t+' 的本組委託附件。</li><li>'+qGoals[round]+'</li><li>在本頁填入全部答案，送出後依提示修正。</li></ol>',learn:'你依用途轉換內容，以能否完全還原判斷無失真；壓縮不保證每次變小。',
+ questionKey:i=>i.round===0?[i.a,i.b,i.add,i.voice]:i.round===1?[i.decode,i.encode]:i.round===2?[i.n%2]:[i.files,i.capacity,i.code],
+ gen(rnd){const n=round===2?Math.floor(rnd()*4):qVersion(rnd);return {t:(round+1)+'-'+(n+1),round,n,a:30+n*2,b:20+n,add:3+n%3,voice:12+n,decode:qBits(n),encode:qBits((n+1)%8),lines:n%2?8:6,kept:n%2?4:3,precise:!!(n&2),files:3+n%2,capacity:60+n*3,code:'MUSIC-'+(n+11)}},
+ view(i,el,api){let content='',questions,attachment;
+ if(round===0){
+ content='<p>請直接依下方公告文字作答：第一場名額增加 '+i.add+'，第二場不變。對照指定語音句，將模擬辨識句中的「明額」校正為「名額」，再核對數字。最後依影片判斷三種轉換的輸出結果。</p>';
+ questions=[{label:'修改後兩場總名額是多少？'},{label:'第一場的新名額是多少？'},{label:'校正後語音句中，增設體驗區有幾個名額？'},...['PDF 開啟成文件','語音輸入後校正','文字轉語音'].map(label=>({label:label+'的結果是？',options:qKinds}))];
+ attachment='<p>公告文字與模擬語音辨識結果（示意）</p><pre class="quest-source">音樂活動公告 '+(i.n+1)+'\n第一場名額 '+i.a+'\n第二場名額 '+i.b+'\n指定語音：第二場增設體驗區 '+i.voice+' 個名額\n模擬辨識：第二場增設體驗區 '+i.voice+' 個明額</pre>';
+ }
+ if(round===1){
+ content='<p>你把 1 當亮、0 當暗，從左到右共 24 顆。暗號一定從亮開始，每換一段交替亮暗；若開頭是暗，先寫亮 0 顆。本模型原圖每顆 1 位元，暗號每個數字固定 5 位元（可記 0～31），不計其他開銷。</p><p>你要還原的暗號：<strong>'+qRun(i.decode).join('、')+'</strong></p><p class="quest-source">你要編碼的另一組燈牌：'+i.encode.join('')+'</p>';
+ questions=[{label:'還原後完整 24 顆（只填連續的 0 與 1）',text:true},{label:'另一組的完整暗號（數字間空一格）',text:true},{label:'另一組編碼後共幾位元？'},{label:'另一組編碼後與原始 24 位元相比？',options:['變小','相同','變大']},{label:'這個模型為何是無失真？',options:['可以逐顆完全還原','每次都能變小']}];
+ attachment=qTable('逐顆編號（示意）',['起點','終點','填寫方式'],[['1','24','從亮開始，按暗號數量交替填 1、0；編碼題在亮暗改變時另記一段']]);
+ }
+ if(round===2){
+ content='<p>兩次確認必須使用不同圖像組。你檢查兩圖整個框內的垂直線；看得出空隙才算分開。原圖的細線靠得近，有損版經縮小與 JPEG 壓縮，部分間隙消失。圖像為自製示意素材；這是固定範例，並非所有 JPEG 都會失去相同細節。</p><p>任務用途：'+(i.precise?'精準核對每條線，必須保留所有分開的線段。':'社群預覽只要認出三或四組粗紋，不要求每條細線分開；此任務優先選較小且符合用途的版本。')+'</p><figure><figcaption>原圖（點開看原尺寸）</figcaption><a href="materials/lines-'+(i.n%2)+'.png"><img class="quest-media" src="materials/lines-'+(i.n%2)+'.png" alt="示意原圖：框內有多組靠近的垂直線"></a></figure><figure><figcaption>有損壓縮圖（同一指定區域）</figcaption><a href="materials/lines-'+(i.n%2)+'.jpg"><img class="quest-media" src="materials/lines-'+(i.n%2)+'.jpg" alt="示意有損圖：靠近的線合成粗紋"></a></figure>';
+ questions=[{label:'原圖有幾條可分辨的垂直線？'},{label:'壓縮圖還有幾條可分辨的粗線？'},{label:'依這組用途應保留哪一版？',options:['原圖','壓縮圖']},{label:'依這組要求能接受目前有損結果嗎？',options:['可以接受','不能接受']}];
+ attachment=qTable('放大觀察紀錄（示意）',['指定區域','觀察'],[['原圖',i.kept+' 組，每組兩條細線，組內與組間均有空隙'],['有損圖',i.kept+' 條粗線，組內空隙消失，組間空隙仍可辨識']]);
+ }
+ if(round===3){
+ const names=['notice.txt','mark.txt','badge.png',...(i.n%2?['readme.txt']:[])];
+ content='<p>請直接閱讀下方 ZIP 解壓後內容清單，計算素材檔數，核對 notice.txt 的名額與 mark.txt 的完整標記。只計素材檔，不計資料夾或 ZIP。badge.png 是透明背景的無失真點陣圖。</p><p>ZIP 可完整還原原檔，不代表一定縮小；已壓縮的圖片或 PDF 可能省不了多少空間。延伸：JPEG 常用於照片、MP3 常用於聲音，MP4 是影音容器，PDF 用於固定排版文件。</p>';
+ questions=[{label:'解壓後素材檔有幾個？'},{label:'notice.txt 公告名額是多少？'},{label:'mark.txt 的完整標記是什麼？',text:true},{label:'要無失真點陣圖並保留透明背景，選哪種格式？',options:['PNG','JPEG','MP3','PDF']},{label:'把多個原檔打包並完整還原，選哪種格式？',options:['MP4','ZIP','JPEG']}];
+ attachment=qTable('ZIP 解壓後內容清單（示意）',['檔案','內容觀察'],names.map(n=>[n,n==='notice.txt'?'公告名額 '+i.capacity:n==='mark.txt'?i.code:n==='badge.png'?'透明背景圖像':'示意使用說明']));
+ }
+ return qView(i,el,api,content,questions,qExpected(i),attachment);
+ },check(i,a){if(i.round===1&&Array.isArray(a)){a=[...a];a[1]=parseNums(a[1]).join(' ')}return qCheck(a,qExpected(i),round===0?['請查修改後兩場的名額並相加。','請查第一場的原數字與指定增加量。','請對照指定語音句，核對校正後的數字。',...Array(3).fill('請回想影片中的來源與輸出內容，是可改文字、校正文字或播放聲音。')]:round===1?['請按暗號逐段核對所有燈位、順序與完整長度。','請在每次亮暗改變時分段；開頭若暗，保留亮 0 顆。','請數完整暗號的數字個數，再依每個數字的位元數計算。','請以位元為相同單位比較原始與編碼大小。','請檢查解碼後能否逐顆一致，不只比較大小。']:round===2?['請放大原圖，看每組線之間是否仍有間隙。','請放大壓縮圖，只計仍有空隙隔開的粗線。','請對照本組用途的細節要求。','請查少掉的細節是否仍符合本組要求。']:['請核對解壓後清單，不含資料夾或 ZIP。','請核對附件清單中 notice.txt 的名額。','請核對附件清單中 mark.txt 的完整文字與符號。','請對照無失真點陣圖及透明背景兩項要求。','請查打包後是否能完整還原各原檔。'])}
+}));
+
+// 保留活動 ID、四個 round 索引及既有 mask 格式。
+const APP=SHELL({week:9,termWeek:15,title:'影片傳到群組變糊',course:'115-g9',unit:2,rounds:ROUNDS,finale:'你已完成四關成果確認，能依附件判斷內容轉換、無失真還原與素材格式。'});
+</script>
+</body>
+</html>
