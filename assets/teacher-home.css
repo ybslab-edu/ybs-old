@@ -24,6 +24,11 @@ button,summary{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.btn{font-weight:500}.btn:not(:disabled):hover{border-color:var(--purple);color:var(--purple)}#cloud-login{background:var(--purple);color:var(--surface);border-color:var(--purple)}
 .msg{font-size:14px}.msg.ok,.state-open{color:var(--ok)}.msg.no{color:var(--warn)}
 .tbl{overflow:auto;max-width:100%;border-radius:6px}.tbl:focus-visible{outline-offset:-3px}
+#cloud-table{max-height:70vh;isolation:isolate}
+#cloud-table table{border-collapse:separate;border-spacing:0}
+#cloud-table th{z-index:2}
+#cloud-table tr>:first-child{position:sticky;left:0;z-index:1;background:var(--surface);color:var(--ink);box-shadow:1px 0 var(--line)}
+#cloud-table thead tr>:first-child{top:0;z-index:3}
 table{border-collapse:collapse;width:100%;min-width:760px;font-size:14px}th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}th{color:var(--muted);font-weight:500;position:sticky;top:0;background:var(--surface)}td{font-variant-numeric:tabular-nums}td a{display:inline-flex;align-items:center;min-height:44px;color:var(--purple)}
 tr.health-warning td{color:var(--warn);background:var(--warn-soft)}.cloud-xp{min-width:10em}.cloud-xp div+div{color:var(--muted);font-size:13px}.cloud-rounds{font-size:12px;line-height:1.7;margin-top:6px;white-space:nowrap}.cloud-late{color:var(--warn);font-weight:700}.cloud-on-time{color:var(--ok)}.cloud-unknown{color:var(--muted)}
 summary{min-height:44px;padding:10px 0}details p{padding-block:6px}.activity-catalog{border-block:1px solid var(--line);margin-bottom:20px}.activity-catalog>summary{color:var(--purple);font-weight:500}.activity-catalog section{padding:12px 0}.activity-catalog ul{list-style:none;padding:0;margin:12px 0}.activity-catalog li{display:flex;justify-content:space-between;align-items:baseline;gap:16px;border-top:1px solid var(--line);padding:8px 0;font-size:14px}.activity-catalog li a{padding:8px 0}.activity-catalog li span{flex-shrink:0}

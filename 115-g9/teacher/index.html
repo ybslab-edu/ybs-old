@@ -7,7 +7,7 @@
 <title>教師專區｜YBS Lab</title>
 <link rel="icon" href="/ybs-old/assets/favicon.svg" type="image/svg+xml">
 <meta name="robots" content="noindex">
-<link rel="stylesheet" href="../../assets/teacher-home.css?v=20261110a">
+<link rel="stylesheet" href="../../assets/teacher-home.css?v=20261124a">
 <script src="../../assets/vendor/xlsx-0.20.3.full.min.js?v=20261031a"></script>
 <script src="../../assets/curriculum.js?v=20261110a"></script>
 <script src="../../assets/activities.js?v=20261122u205"></script>
@@ -47,8 +47,11 @@
     </div>
     <p class="msg" id="cloud-status" role="status">請使用課程擁有者的 Google 帳號登入。</p>
     <p>截止規則：開放後 7 天內（含截止當下）為準時，其後首次過關標示「補做」。時間為台灣時間；無開放日期標示「未判定」，僅供教師判斷，不自動扣分。</p>
-    <label for="cloud-class">班級</label> <select id="cloud-class" disabled><option value="">請先讀取雲端紀錄</option></select>
-    <div class="tbl" id="cloud-table" tabindex="0" role="region" aria-label="雲端班級紀錄表（可橫向捲動）"></div>
+    <div class="row">
+      <label for="cloud-class">班級</label> <select id="cloud-class" disabled><option value="">請先讀取雲端紀錄</option></select>
+      <label for="cloud-activity">活動</label> <select id="cloud-activity"><option value="">全部活動</option></select>
+    </div>
+    <div class="tbl" id="cloud-table" tabindex="0" role="region" aria-label="雲端班級紀錄表（可上下及橫向捲動）"></div>
   </section>
 
   </section>
@@ -93,7 +96,7 @@
 <script src="../../assets/login.js?v=20261121pr8"></script>
 <script src="../../assets/xp.js?v=20261120a"></script>
 <script src="../../assets/item-health.js?v=20261106q"></script>
-<script src="../../assets/guest-teacher.js?v=20261120a"></script>
+<script src="../../assets/guest-teacher.js?v=20261124a"></script>
 <script src="../../assets/shell.js?v=20261120a"></script>
 <script>
 const $=id=>document.getElementById(id);

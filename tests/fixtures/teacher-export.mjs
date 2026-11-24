@@ -7,7 +7,7 @@ import {Element} from './activity-dom.mjs';
 const read=path=>readFileSync(new URL('../../'+path,import.meta.url),'utf8');
 const html=read('115-g9/teacher/index.html');
 const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)].map(m=>m[1]).join('\n');
-export function setup({stored=new Map(),storageErrors={},cloud}={}){
+export function setup({stored=new Map(),storageErrors={},cloud,now}={}){
   const elements=new Map(), downloads=[], blobs=[], storageCalls=[], events=new EventTarget();
   function storage(method,key,value){
     storageCalls.push({method,key});
@@ -24,6 +24,7 @@ export function setup({stored=new Map(),storageErrors={},cloud}={}){
     window:{addEventListener:events.addEventListener.bind(events)},
     document:{getElementById:get,createElement:create,body},
     localStorage:{getItem:key=>storage('getItem',key),setItem:(key,value)=>storage('setItem',key,value),removeItem:key=>storage('removeItem',key)},
+    ...(now === undefined ? {} : {Date:class extends Date {constructor(...args){super(...(args.length ? args : [now]));} static now(){return now;}}}),
     Blob,URL:{createObjectURL(blob){blobs.push(blob);return 'blob:synthetic';},revokeObjectURL(){}},setTimeout:()=>0,
     YBS:cloud?.ybs, firebase:cloud?.firebase,
   });

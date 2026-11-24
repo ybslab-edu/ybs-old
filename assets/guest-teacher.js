@@ -3,6 +3,24 @@
 window.YBSGuestTeacher = function ({course, activities, saveBook, onRecords = () => {}}) {
   if (YBS.fullrev) { YBS.mountTeacher(); return; }
   const el = id => document.getElementById(id);
+  // 僅儲存活動篩選值；不持久化班級、名冊或雲端紀錄。
+  const filterKey = 'ybslab:teacher-activity:' + course;
+  const activitySelect = el('cloud-activity');
+  const orderedActivities = Object.values(activities).sort((a,b) =>
+    (b.date || '').localeCompare(a.date || '') || b.week - a.week);
+  for (const a of orderedActivities) {
+    const option = document.createElement('option');
+    option.value = String(a.week);
+    option.textContent = [termWeekLabel(a), a.title].filter(Boolean).join('・');
+    activitySelect.appendChild(option);
+  }
+  const latest = orderedActivities.find(a => isActivityOpen(a));
+  let selectedActivity = latest ? String(latest.week) : '';
+  try {
+    const saved = localStorage.getItem(filterKey);
+    if (saved === '' || orderedActivities.some(a => String(a.week) === saved)) selectedActivity = saved;
+  } catch (_) { /* 儲存區不可用仍可篩選。 */ }
+  activitySelect.value = selectedActivity;
   let auth, db, ready, generation = 0, busy = false, rows = [], people = [], growth = new Map();
   const message = text => { el('cloud-status').textContent = text; };
   function controls() {
@@ -138,7 +156,7 @@ window.YBSGuestTeacher = function ({course, activities, saveBook, onRecords = ()
     const table=node('table'), thead=node('thead'), head=node('tr');
     const ids=Object.keys(activities).map(Number).sort((a,b)=>a-b);
     head.appendChild(node('th','座號'));
-    for(const id of ids)head.appendChild(node('th',activities[id].title));
+    for(const id of ids){const th=node('th',activities[id].title);th.hidden=!!selectedActivity&&String(id)!==selectedActivity;head.appendChild(th);}
     head.appendChild(node('th','等級／XP')); head.appendChild(node('th','準時／補做彙總')); head.appendChild(node('th','詳細資料')); head.appendChild(node('th','成長紀錄')); thead.appendChild(head); table.appendChild(thead);
     const tbody=node('tbody');
     const seats=[...new Set(people.filter(p=>p.cls===cls).map(p=>p.seat))].sort((a,b)=>a-b);
@@ -149,6 +167,7 @@ window.YBSGuestTeacher = function ({course, activities, saveBook, onRecords = ()
       let conflict=duplicate||sharedUID; const counted=[];
       for(const id of ids){
         const found=records.filter(r=>r.activity===id), td=node('td');
+        td.hidden=!!selectedActivity&&String(id)!==selectedActivity;
         if(found.length>1||duplicate||sharedUID){td.textContent='待核對';conflict=true;}
         else if(found.length){const r=found[0], n=count(r.mask);td.textContent=score(r)+' 分（'+(n===r.tries.length?'✓':n+'/'+r.tries.length)+'）'+(r.source==='未驗證'?'（未驗證）':'');td.appendChild(roundNodes(r));counted.push(r);}
         else td.textContent=activityScore(0,activities[id].rounds.length)+' 分（0/'+activities[id].rounds.length+'）';
@@ -171,6 +190,11 @@ window.YBSGuestTeacher = function ({course, activities, saveBook, onRecords = ()
     table.appendChild(tbody);target.appendChild(table);
   }
   el('cloud-class').onchange = render;
+  activitySelect.onchange = () => {
+    selectedActivity = activitySelect.value;
+    try { localStorage.setItem(filterKey, selectedActivity); } catch (_) {}
+    render();
+  };
   el('cloud-login').onclick = async () => {
     try {
       ready ||= init().catch(e => { ready=null; throw e; }); await ready;

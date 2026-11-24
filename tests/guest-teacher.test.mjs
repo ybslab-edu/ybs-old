@@ -5,7 +5,7 @@ import {setup as teacher} from './fixtures/teacher-export.mjs';
 import {settle,error} from './fixtures/guest-firebase.mjs';
 const stamp={toMillis:()=>Date.UTC(2026,10,5)};
 const guest=(id,extra={})=>({id,data:()=>({cls:'999',seat:1,activity:1,round:0,level:1,tries:2,verified:false,passedAt:stamp,...extra})});
-function setup({owner='teacher1',guests=[guest('anon1_1_0'),guest('anon1_1_1',{round:1}),guest('anon2_1_0')],hold,fail=false,roster=[{id:'student@example.invalid',data:()=>({cls:999,seat:1})}],attempts=[{id:'real1_1_0',data:()=>({uid:'real1',email:'student@example.invalid',activity:1,round:0,level:1,tries:3,passedAt:stamp})}]}={}){
+function setup({stored,storageErrors,now,owner='teacher1',guests=[guest('anon1_1_0'),guest('anon1_1_1',{round:1}),guest('anon2_1_0')],hold,fail=false,roster=[{id:'student@example.invalid',data:()=>({cls:999,seat:1})}],attempts=[{id:'real1_1_0',data:()=>({uid:'real1',email:'student@example.invalid',activity:1,round:0,level:1,tries:3,passedAt:stamp})}]}={}){
   const queries=[],observers=[];
   const auth={currentUser:null,onAuthStateChanged(fn){observers.push(fn);queueMicrotask(()=>fn(this.currentUser));return()=>{};},
     async signInWithPopup(){auth.currentUser={uid:'teacher1'};observers.forEach(f=>f(auth.currentUser));},
@@ -14,7 +14,7 @@ function setup({owner='teacher1',guests=[guest('anon1_1_0'),guest('anon1_1_1',{r
   const db={doc(path){return{async get(options){queries.push([path,options]);return{exists:true,data:()=>({ownerUid:owner})};}};},
     collection(path){return{async get(options){queries.push([path,options]);if(hold)await hold;if(fail)throw error('unavailable');return{docs:docs[path.split('/').at(-1)]};}};}};
   function GoogleAuthProvider(){this.setCustomParameters=()=>{};}
-  const h=teacher({cloud:{ybs:{firebaseSession:async()=>({auth,db})},firebase:{auth:{GoogleAuthProvider}}}});
+  const h=teacher({stored,storageErrors,now,cloud:{ybs:{firebaseSession:async()=>({auth,db})},firebase:{auth:{GoogleAuthProvider}}}});
   return {...h,queries,auth,async login(){await h.get('cloud-login').onclick();await settle();},read:()=>h.get('cloud-read').onclick(),logout:()=>h.get('cloud-logout').onclick()};
 }
 const json=(h,source)=>JSON.parse(h.evaluate(`JSON.stringify(${source})`));
@@ -258,4 +258,40 @@ test('成長紀錄隨延遲讀取、切班及重讀重建；空紀錄帳號仍�
   await h.read();h.get('cloud-class').value='999';h.get('cloud-class').onchange();
   assert.equal(h.get('cloud-table').querySelectorAll('a').length,1);
   await h.logout();assert.equal(h.get('cloud-table').querySelectorAll('a').length,0);
+});
+
+const filterKey='ybslab:teacher-activity:115-g9';
+test('活動按上課週次倒序；預設最新已開放，沒有已開放活動則全部',()=>{
+  const now=Date.parse('2026-11-24T04:00:00Z'),h=setup({now});
+  const expected=json(h,'Object.values(W).sort((a,b)=>(b.date||" ").localeCompare(a.date||" ")||b.week-a.week)');
+  assert.deepEqual(h.get('cloud-activity').querySelectorAll('option').map(o=>o.value),['',...expected.map(a=>String(a.week))]);
+  assert.equal(h.get('cloud-activity').value,String(expected.find(a=>h.evaluate(`isActivityOpen(W[${a.week}])`)).week));
+  assert.equal(setup({now:Date.UTC(2000,0,1)}).get('cloud-activity').value,'');
+});
+test('活動篩選記住全部或單一活動；失效值與儲存失敗安全回退',()=>{
+  for(const value of ['', '1'])assert.equal(setup({stored:new Map([[filterKey,value]])}).get('cloud-activity').value,value);
+  const normal=setup().get('cloud-activity').value;
+  assert.equal(setup({stored:new Map([[filterKey,'99999']])}).get('cloud-activity').value,normal);
+  const h=setup({storageErrors:{getItem:filterKey,setItem:filterKey}});
+  assert.equal(h.get('cloud-activity').value,normal);
+  h.get('cloud-activity').value='1';assert.doesNotThrow(()=>h.get('cloud-activity').onchange());
+});
+test('切換活動僅隱藏欄位：彙總、XP、衝突、完整匯出與查詢數不變',async()=>{
+  const h=setup();await h.login();await h.read();
+  h.get('cloud-class').value='999';h.get('cloud-class').onchange();
+  const select=h.get('cloud-activity');
+  select.value='';select.onchange();
+  const before=h.get('cloud-table').querySelector('tbody tr').querySelectorAll('td').map(td=>td.textContent);
+  h.get('cloud-export').onclick();
+  select.value='1';select.onchange();
+  const cells=h.get('cloud-table').querySelector('tbody tr').querySelectorAll('td');
+  assert.deepEqual(cells.map(td=>td.textContent),before);
+  assert.equal(cells[1].hidden,false);assert.equal(cells[2].hidden,true);
+  assert.equal(h.get('cloud-table').querySelectorAll('th')[2].hidden,true);
+  assert.equal(h.stored.get(filterKey),'1');
+  assert.deepEqual(h.storageCalls.filter(c=>c.method==='setItem').map(c=>c.key),[filterKey,filterKey]);
+  h.get('cloud-export').onclick();
+  assert.deepEqual(new Uint8Array(await h.blobs[0].arrayBuffer()),new Uint8Array(await h.blobs[1].arrayBuffer()));
+  assert.equal(h.queries.length,4);
+  await h.logout();assert.equal(select.value,'1');
 });

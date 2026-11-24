@@ -9,7 +9,7 @@ const {chromium}=await import(process.env.PLAYWRIGHT_MODULE||'playwright');
 const root=resolve(fileURLToPath(new URL('../',import.meta.url)));
 let server,browser,base;
 const fake=`(() => {
-  const state=window.synthetic={fail:false,empty:false,hold:false,queries:[]};
+  const state=window.synthetic={fail:false,empty:false,hold:false,many:false,queries:[]};
   let changed=()=>{};
   const auth={currentUser:null,onAuthStateChanged(f){changed=f;f(null)},
     async signInWithPopup(){auth.currentUser={uid:'synthetic-owner'};changed(auth.currentUser)},
@@ -24,7 +24,7 @@ const fake=`(() => {
       if(state.hold)await new Promise(r=>(state.release ||= []).push(r));
       if(state.fail)throw Error('synthetic');
       const name=path.split('/').at(-1);
-      return {docs:state.empty?[]:name==='roster'?roster:name==='attempts'?records:[{id:'guest_1_0',data:()=>({cls:'999',seat:2,activity:1,round:0,level:1,tries:999,verified:false,passedAt:{toMillis:()=>1}})}]};
+      return {docs:state.empty?[]:name==='roster'?(state.many?Array.from({length:60},(_,i)=>({id:'s'+i+'@example.invalid',data:()=>({cls:998,seat:i+1})})):roster):name==='attempts'?records:[{id:'guest_1_0',data:()=>({cls:'999',seat:2,activity:1,round:0,level:1,tries:999,verified:false,passedAt:{toMillis:()=>1}})}]};
     }})};
   window.YBS={firebaseSession:async()=>({auth,db})};
   function GoogleAuthProvider(){this.setCustomParameters=()=>{}}
@@ -32,14 +32,14 @@ const fake=`(() => {
 })();`;
 before(async()=>{
   server=createServer(async(req,res)=>{
-    const name=new URL(req.url,'http://localhost').pathname;
+    const name=new URL(req.url,'http://localhost').pathname.replace(/^\/ybs-old(?=\/)/,'');
     const path=resolve(root,'.'+(name.endsWith('/')?name+'index.html':name));
     if(!path.startsWith(root+sep)){res.writeHead(404).end();return}
     try{res.setHeader('Content-Type',({'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml'})[extname(path)]||'application/octet-stream');res.end(await readFile(path))}
     catch{res.writeHead(404).end()}
   });
   await new Promise((ok,no)=>{server.once('error',no);server.listen(0,'127.0.0.1',ok)});
-  base='http://127.0.0.1:'+server.address().port;
+  base='http://127.0.0.1:'+server.address().port+'/ybs-old';
   browser=await chromium.launch({headless:true});
 });
 after(async()=>{await browser?.close();if(server?.listening)await new Promise(ok=>server.close(ok))});
@@ -59,6 +59,7 @@ for(const width of [1440,390])test(`教師補做標示 ${width}px：台灣時間
     await page.evaluate(()=>{W[1]={...W[1],date:'2026-11-02'}});
     await page.locator('#cloud-login').click();await page.locator('#cloud-read').click();
     await page.locator('#cloud-class').selectOption('998');
+    await page.locator('#cloud-activity').selectOption('');
     const row=page.locator('#cloud-table tbody tr').first(),cell=row.locator('td').nth(1);
     assert.match(await cell.innerText(),/第 1 關：11\/08 23:59 準時/);
     assert.match(await cell.innerText(),/第 2 關：11\/09 00:00 補做/);
@@ -148,5 +149,39 @@ for(const [width,colorScheme] of [[1440,'light'],[390,'light'],[1440,'dark']])te
     if(width===1440&&colorScheme==='light')await page.locator('[aria-label="雲端過關紀錄"]').screenshot({path:shots+'/cloud-table.png'});
     await page.locator('#cloud-logout').click();assert.equal(await page.locator('#cloud-table a').count(),0);
     assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
+  }finally{await context.close()}
+});
+
+for(const colorScheme of ['light','dark'])test(`活動篩選、固定座號與表頭，/ybs-old/ 路徑 ${colorScheme}`,async()=>{
+  const context=await browser.newContext({viewport:{width:1440,height:900},colorScheme});
+  const page=await context.newPage();
+  try{
+    await context.route('**/*',route=>{
+      const url=route.request().url();
+      if(url.startsWith(base+'/assets/login.js'))return route.fulfill({contentType:'text/javascript',body:fake});
+      return url.startsWith(base+'/')?route.continue():route.abort();
+    });
+    await page.goto(base+'/115-g9/teacher/');
+    const initial=await page.locator('#cloud-activity').inputValue();assert.ok(initial);
+    await page.locator('#cloud-login').click();await page.evaluate(()=>synthetic.many=true);
+    await page.locator('#cloud-read').click();await page.locator('#cloud-class').selectOption('998');
+    const queries=await page.evaluate(()=>synthetic.queries.length);
+    await page.locator('#cloud-activity').selectOption('1');
+    assert.equal(await page.locator('#cloud-table thead th:visible').count(),6);
+    await page.locator('#cloud-activity').selectOption('');
+    const result=await page.locator('#cloud-table').evaluate(box=>{
+      box.scrollLeft=500;box.scrollTop=300;
+      const cell=box.querySelector('tbody tr td'),head=box.querySelector('thead th'),rect=box.getBoundingClientRect();
+      return {x:cell.getBoundingClientRect().left-rect.left,y:head.getBoundingClientRect().top-rect.top,
+        left:box.scrollLeft,top:box.scrollTop,bg:getComputedStyle(cell).backgroundColor,
+        color:getComputedStyle(cell).color,z:Number(getComputedStyle(head).zIndex)};
+    });
+    assert.ok(result.left>0&&result.top>0);assert.ok(Math.abs(result.x)<2&&Math.abs(result.y)<2);
+    assert.ok(result.z>1);assert.notEqual(result.bg,'rgba(0, 0, 0, 0)');assert.notEqual(result.bg,result.color);
+    assert.equal(await page.evaluate(()=>synthetic.queries.length),queries);
+    await page.reload();assert.equal(await page.locator('#cloud-activity').inputValue(),'');
+    await page.locator('#cloud-activity').selectOption('1');await page.reload();
+    assert.equal(await page.locator('#cloud-activity').inputValue(),'1');
+    assert.equal(await page.locator('.brand').evaluate(a=>new URL(a.href).pathname),'/ybs-old/');
   }finally{await context.close()}
 });
