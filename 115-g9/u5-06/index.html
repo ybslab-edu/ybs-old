@@ -14,9 +14,9 @@
 .plot{max-width:440px;background:var(--surface);border:1px solid var(--line);border-radius:0;padding:6px}
 .plot svg{width:100%;height:auto;display:block}
 .plot .ax{stroke:var(--line);stroke-width:1}
-.plot text{fill:var(--muted);font:12px var(--f-body)}
-.legend{display:flex;gap:14px;font-size:15px;flex-wrap:wrap}
-.perc{font-size:16px;background:var(--surface);border:1px solid var(--line);border-radius:0;padding:10px 14px;line-height:1.8}
+.plot text{fill:var(--muted);font:var(--text-min,17px) var(--f-body)}
+.legend{display:flex;gap:14px;font-size:var(--text-min,17px);flex-wrap:wrap}
+.perc{font-size:var(--text-min,17px);background:var(--surface);border:1px solid var(--line);border-radius:0;padding:10px 14px;line-height:1.8}
 .perc b{font-family:var(--f-mono)}
 .perc{clip-path:polygon(0 0,calc(100% - var(--cut)) 0,100% var(--cut),100% 100%,var(--cut) 100%,0 calc(100% - var(--cut)))}
 </style>

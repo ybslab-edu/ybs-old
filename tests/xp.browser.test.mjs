@@ -1,3 +1,4 @@
+import {previewBase} from './fixtures/preview-site.mjs';
 // 真實 DOM + 動態核心載入；本機 UTF-8 伺服器與合成 Firebase，不接外部服務。
 import {test,before,after} from 'node:test';
 import assert from 'node:assert/strict';
@@ -5,7 +6,7 @@ import {createServer} from 'node:http';
 import {readFile} from 'node:fs/promises';
 const {chromium}=await import(process.env.PLAYWRIGHT_MODULE||'playwright');
 let browser,server,base;
-const html=`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/assets/shell.css"></head><body>
+const html=`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/ybs-old/assets/shell.css"></head><body>
 <script>
 const TEACHER={remembered:()=>false,remember(){}};
 const ACTIVITIES=[1,2].map(week=>({course:'115-g9',week,codes:['資D-IV-1'],rounds:['甲','乙','丙','丁']}));
@@ -30,7 +31,7 @@ localStorage.setItem('it9:w1:999-1',JSON.stringify({mask:15,tries:[2,2,2,2],time
 localStorage.setItem('ybs:xp:115-g9:seat:999-1',JSON.stringify({1:{passes:{0:{passedAt:Date.now()}}}}));
 localStorage.setItem('ybs:xp:115-g9:uid:synthetic-one',JSON.stringify({2:{passes:{0:{passedAt:Date.now()}}}}));
 </script>
-<script src="/assets/shell.js"></script><script>let n=0;const APP=SHELL({course:'115-g9',week:2,title:'合成手機標題列與成長紀錄',rounds:[0,1,2,3].map(i=>({name:'合成關卡'+i,lv:1,now:'目前',goal:'目標',gen:()=>({n:++n}),view:()=>({get:()=>null}),check:()=>true}))});</script></body></html>`;
+<script src="/ybs-old/assets/shell.js"></script><script>let n=0;const APP=SHELL({course:'115-g9',week:2,title:'合成手機標題列與成長紀錄',rounds:[0,1,2,3].map(i=>({name:'合成關卡'+i,lv:1,now:'目前',goal:'目標',gen:()=>({n:++n}),view:()=>({get:()=>null}),check:()=>true}))});</script></body></html>`;
 before(async()=>{
   // 比照 activity-header.browser：readFile 以原始位元組送出資源；HTML 明確宣告 UTF-8。
   server=createServer(async(req,res)=>{
@@ -40,8 +41,7 @@ before(async()=>{
     try{res.writeHead(200,{'Content-Type':(path.endsWith('.css')?'text/css':'text/javascript')+'; charset=utf-8'});res.end(await readFile(new URL('..'+path,import.meta.url)))}
     catch{res.end()}
   });
-  await new Promise((ok,no)=>{server.once('error',no);server.listen(0,'127.0.0.1',ok)});
-  base='http://127.0.0.1:'+server.address().port;
+  base = await previewBase(server, {external:false});
   browser=await chromium.launch({headless:true});
 });
 after(async()=>{await browser?.close();if(server?.listening)await new Promise(ok=>server.close(ok))});
@@ -64,7 +64,9 @@ for(const [width,reduced,dark] of [[1440,false,false],[390,false,true],[320,true
         await page.evaluate(()=>confirmCloud());
         await page.waitForFunction(()=>document.getElementById('xp-total').textContent==='80 XP');
         assert.equal(await page.locator('#xp-link').isVisible(),true);
+        await page.click('#account-toggle');
         assert.equal(await page.locator('#xp-progress').isVisible(),true);
+        await page.keyboard.press('Escape');
         assert.equal(await page.locator('#xp-link').getAttribute('aria-disabled'),null);
         assert.equal(await page.locator('#xp-link').getAttribute('href'),'../me/');
         assert.equal(await page.locator('#xp-link').getAttribute('tabindex'),null);
@@ -76,7 +78,9 @@ for(const [width,reduced,dark] of [[1440,false,false],[390,false,true],[320,true
         await page.click('#g-go');
         assert.equal(await page.locator('#xp-link').isVisible(),false);
         assert.equal(await page.locator('#xp-progress').isVisible(),false);
+        await page.click('#account-toggle');
         assert.equal(await page.locator('#xp-login-hint').isVisible(),true);
+        await page.keyboard.press('Escape');
         assert.equal(await page.locator('#xp-login-hint').textContent(),'用帳號登入就能累積等級');
       }
       for(let i=0;i<4;i++){
@@ -116,7 +120,7 @@ test('登入還原雲端綠勾並保存，只增不減；重新整理及重做�
   assert.equal(await page.locator('#rounds button.passed').count(),0);
   await page.evaluate(()=>confirmCloud());
   await page.waitForFunction(()=>document.querySelectorAll('#rounds button.passed').length===1);
-  assert.match(await page.locator('#rounds button[data-i="2"]').innerText(),/✓/);
+  assert.match(await page.locator('#rounds button[data-i="2"]').getAttribute('aria-label'),/（已過關）/);
   assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('it9:w2:999-1')).mask),4);
   await page.evaluate(()=>{APP.load(2);document.getElementById('b-send').click();document.getElementById('b-next-group').click();document.getElementById('b-send').click()});
   assert.equal(await page.evaluate(()=>submissions.length),0);
@@ -124,7 +128,7 @@ test('登入還原雲端綠勾並保存，只增不減；重新整理及重做�
   await page.waitForFunction(()=>document.getElementById('xp-total').textContent==='0 XP');
   assert.equal(await page.locator('#rounds button.passed').count(),1);
   await page.reload();await page.click('#mock-login');await page.click('#g-isme');
-  assert.match(await page.locator('#rounds button[data-i="2"]').innerText(),/✓/);
+  assert.match(await page.locator('#rounds button[data-i="2"]').getAttribute('aria-label'),/（已過關）/);
   await page.evaluate(()=>{records=[{uid:'synthetic-one',activity:2,round:0}];confirmCloud()});
   await page.waitForFunction(()=>document.querySelectorAll('#rounds button.passed').length===2);
   assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('it9:w2:999-1')).mask),5);
@@ -142,6 +146,7 @@ test('雲端讀取未完成就換人登入，舊帳號紀錄不會套到新帳�
     }})});
   });
   await page.click('#mock-login');await page.click('#g-isme');
+  await page.locator('#account').evaluate(el=>el.open=true);
   await page.click('#b-swap');
   await page.evaluate(()=>{
     profile={uid:'synthetic-two',email:'synthetic-two@example.invalid'};
@@ -150,8 +155,8 @@ test('雲端讀取未完成就換人登入，舊帳號紀錄不會套到新帳�
   });
   await page.click('#g-isme');await page.evaluate(()=>confirmCloud());
   await page.waitForFunction(()=>document.querySelectorAll('#rounds button.passed').length===1);
-  assert.match(await page.locator('#rounds button[data-i="3"]').innerText(),/✓/);
-  assert.doesNotMatch(await page.locator('#rounds button[data-i="0"]').innerText(),/✓/);
+  assert.match(await page.locator('#rounds button[data-i="3"]').getAttribute('aria-label'),/（已過關）/);
+  assert.doesNotMatch(await page.locator('#rounds button[data-i="0"]').getAttribute('aria-label'),/（已過關）/);
   assert.equal(await page.evaluate(()=>localStorage.getItem('it9:w2:999-1')),null);
   assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('it9:w2:999-2')).mask),8);
 });

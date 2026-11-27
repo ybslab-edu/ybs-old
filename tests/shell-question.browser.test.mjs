@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import {readFileSync,mkdtempSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-const shots=mkdtempSync(join(tmpdir(),'ybs-progress-'));
+const shots=process.env.PORT_SHOTS_DIR?join(process.env.PORT_SHOTS_DIR,'question'):mkdtempSync(join(tmpdir(),'ybs-progress-'));
 const {chromium} = await import(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 let browser;
@@ -39,7 +39,7 @@ test('累積計數：答對、答錯留題、答對即過關；舊存檔、換�
   for(const teacher of [false,true]){
     const page=await setup(t,{teacher});
     assert.equal(await page.locator('.question-changed').count(),0);
-    if(!teacher)assert.match(await page.locator('#rounds button.passed').innerText(),/合成關2 ✓/);
+    if(!teacher)assert.match(await page.locator('#rounds button.passed').getAttribute('aria-label'),/第 2 關：合成關2（已過關）/);
     await page.click('#b-send');
     assert.match(await page.locator('#streak').innerText(),/累積答對 1\/2/);
     await page.click('#b-next-group');
@@ -135,14 +135,14 @@ test('過關按鈕深淺色 AA、選中外框；頁首上傳狀態在桌面及�
     // 選中與鍵盤焦點是獨立狀態；先移除殘留焦點，再檢查選中外框。
     await page.evaluate(()=>document.activeElement?.blur());
     const styles=await page.locator('#rounds button').evaluateAll(buttons=>buttons.map(el=>{
-      const s=getComputedStyle(el),mark=getComputedStyle(el.querySelector('.done'));
-      return {color:s.color,bg:s.backgroundColor,mark:mark.color,outline:s.outlineWidth,outlineStyle:s.outlineStyle,border:s.borderWidth,borderColor:s.borderColor,selected:el.getAttribute('aria-pressed'),focused:el.matches(':focus'),text:el.textContent};
+      const s=getComputedStyle(el),mark=getComputedStyle(el,'::after'),face=getComputedStyle(el,'::before');
+      return {color:s.color,bg:'rgb(37, 44, 58)',mark:mark.color,markBg:mark.backgroundColor,face:face.backgroundImage,outline:s.outlineWidth,outlineStyle:s.outlineStyle,border:s.borderWidth,borderColor:s.borderColor,selected:el.getAttribute('aria-pressed'),focused:el.matches(':focus'),text:el.getAttribute('aria-label')};
     }));
-    for(const s of styles){assert.match(s.text,/已過關/);assert.match(s.text,/✓/);assert.ok(contrast(s.color,s.bg)>=4.5);assert.ok(contrast(s.mark,s.bg)>=4.5)}
+    for(const s of styles){assert.match(s.text,/已過關/);assert.match(s.text,/（已過關）/);assert.ok(contrast(s.color,s.bg)>=4.5);assert.ok(contrast(s.mark,s.markBg)>=4.5)}
     assert.equal(styles[0].selected,'false');assert.equal(styles[0].focused,false);assert.equal(styles[1].focused,false);
     // Chromium 在 outline-style:none 時仍可能回報 medium（3px）；以樣式判斷是否繪製外框。
     // 任務日誌用 2px 餘燼橙邊線標示選中，外框保留給鍵盤焦點。
-    assert.equal(styles[1].selected,'true');assert.equal(styles[1].border,'2px');assert.equal(styles[1].borderColor,'rgb(255, 107, 61)');assert.equal(styles[1].outlineStyle,'none');assert.equal(styles[0].outlineStyle,'none');
+    assert.equal(styles[1].selected,'true');assert.equal(styles[1].border,'2px');assert.ok(styles[1].face.includes('rgb(255, 107, 61)'));assert.equal(styles[1].outlineStyle,'none');assert.equal(styles[0].outlineStyle,'none');
     // 用鍵盤移回未選中的關卡，仍須顯示可見焦點框。
     await page.locator('#rounds button').first().focus();
     await page.keyboard.press('Tab');
@@ -163,10 +163,9 @@ for(const width of [1280,390])for(const teacher of [false,true])test(`移除分�
     assert.equal(await page.locator('#score, #report, #rep-note').count(),0);
     if(passed)assert.match(await page.locator('#verdict').innerText(),/過關/);
     if(passed&&!teacher){
-      assert.equal(await page.getByRole('button',{name:'合成關1 已過關',exact:true}).count(),1);
-      assert.equal(await page.locator('#rounds .done').getAttribute('aria-hidden'),'true');
-      const hidden=await page.locator('#rounds .shell-sr-only').evaluate(el=>({width:el.offsetWidth,height:el.offsetHeight,clip:getComputedStyle(el).clipPath}));
-      assert.deepEqual(hidden,{width:1,height:1,clip:'inset(50%)'});
+      assert.equal(await page.getByRole('button',{name:'第 1 關：合成關1（已過關）',exact:true}).count(),1);
+      assert.equal(await page.locator('#rounds button.passed').textContent(),'第 1 關');
+      assert.equal(await page.locator('#rounds button.passed').evaluate(el=>getComputedStyle(el,'::after').content),'"✓"');
     }
     if(teacher){
       assert.equal(await page.locator('#rounds button.passed').count(),0,'教師示範不記錄過關');
@@ -175,7 +174,8 @@ for(const width of [1280,390])for(const teacher of [false,true])test(`移除分�
     await page.screenshot({path:join(shots,`ybs-progress-${width}-${teacher?'teacher':'student'}-${passed}.png`),fullPage:true});
   }
   if(teacher){
-    await page.click('#b-swap');
+    await page.locator('#account').evaluate(el=>el.open=true);
+  await page.click('#b-swap');
     // 此合成頁未載入 login.js；沿用 setup 的班座進場方式，只驗證退出示範後的顯示。
     await page.evaluate(()=>{document.getElementById('in-cls').value='999';document.getElementById('in-seat').value='1';document.getElementById('g-go').click()});
     assert.equal(await page.locator('#score, #report, #rep-note').count(),0);

@@ -13,10 +13,10 @@
 :root{--teach-host:#F2B705;--teach-host-ink:#2A2000}
 /* 第 17 週：封包、IP、網域名稱。封包卡上面是「標頭」，下面是內容 */
 .pkt{display:flex;flex-direction:column;align-items:stretch;gap:2px;text-align:left}
-.pkt .hd{font-family:var(--f-mono);font-size:12px;opacity:.75}
+.pkt .hd{font-family:var(--f-mono);font-size:var(--text-min,17px);opacity:.75}
 .pkt .bd{font-size:18px}
-.url{font-family:var(--f-mono);font-size:16px;overflow-wrap:anywhere;word-break:break-all}
-.dns{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0;font-size:15px;border:1px solid var(--line);border-radius:0;overflow:hidden}
+.url{font-family:var(--f-mono);font-size:var(--text-min,17px);overflow-wrap:anywhere;word-break:break-all}
+.dns{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0;font-size:var(--text-min,17px);border:1px solid var(--line);border-radius:0;overflow:hidden}
 .dns>*{padding:6px 10px;border-bottom:1px solid var(--line);font-family:var(--f-mono);overflow-wrap:anywhere}
 .dns>:nth-child(even){white-space:nowrap}
 .dns .h{font-family:var(--f-body);font-weight:700;background:var(--bg)}

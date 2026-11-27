@@ -21,7 +21,7 @@
 .netmap .x{fill:var(--alert);font:700 18px var(--f-body);text-anchor:middle;dominant-baseline:central}
 .netmap .nd circle.hit{fill:transparent;stroke:none}
 .netmap .nd circle:not(.hit){fill:var(--surface);stroke:var(--ink);stroke-width:2.5}
-.netmap .nd text{fill:var(--ink);paint-order:stroke;stroke:var(--surface);stroke-width:4px;stroke-linejoin:round;font:500 15px var(--f-body);text-anchor:middle}
+.netmap .nd text{fill:var(--ink);paint-order:stroke;stroke:var(--surface);stroke-width:4px;stroke-linejoin:round;font:500 var(--text-min,17px) var(--f-body);text-anchor:middle}
 .netmap .nd.click{cursor:pointer}
 .netmap .nd.click:hover circle:not(.hit),.netmap .nd:focus-visible circle:not(.hit){stroke:var(--a);stroke-width:4}
 .netmap .nd:focus{outline:none}
@@ -29,7 +29,7 @@
 .netmap .nd.in circle:not(.hit){fill:var(--teach-visited)}
 .netmap .nd.off circle:not(.hit){fill:var(--alert);stroke:var(--alert)}
 .netmap .nd.off text{fill:var(--alert);font-weight:700}
-.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px;color:var(--muted);align-items:center}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:var(--text-min,17px);color:var(--muted);align-items:center}
 .legend i{display:inline-block;width:26px;height:0;border-top:3px solid;vertical-align:middle;margin-right:4px}
 .pathtxt{font-size:18px;font-weight:700;min-height:1.6em}
 </style>

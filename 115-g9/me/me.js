@@ -79,7 +79,7 @@
       + [.25,.5,.75,1].map(v => '<polygon class="gridline" points="' + shape(v) + '"/>').join('')
       + axes.map((_,i) => '<line class="spoke" x1="150" y1="140" x2="' + point(i,1)[0] + '" y2="' + point(i,1)[1] + '"/>').join('')
       + '<polygon class="plot-outline" points="' + plot + '"/>'
-      + axes.map((a,i) => { const p=point(i,a.ratio),t=point(i,1.23); return '<circle class="plot-dot" r="3.5" cx="' + p[0] + '" cy="' + p[1] + '"/><text x="' + t[0] + '" y="' + t[1] + '" text-anchor="middle" dominant-baseline="middle" font-size="15">' + a.id + '</text>'; }).join('') + '</svg>';
+      + axes.map((a,i) => { const p=point(i,a.ratio),t=point(i,1.23); return '<circle class="plot-dot" r="3.5" cx="' + p[0] + '" cy="' + p[1] + '"/><text x="' + t[0] + '" y="' + t[1] + '" text-anchor="middle" dominant-baseline="middle" font-size="17">' + a.id + '</text>'; }).join('') + '</svg>';
     $('axes').innerHTML = axes.map(a => '<li data-axis="' + a.id + '"><span class="axis-title"><i class="axis-color axis-' + a.id + '" aria-hidden="true"></i><b class="mono axis-key">' + a.id + '</b>' + a.name + '</span><span class="axis-value">'
       + (a.denominator ? '<span class="mono">' + percent(a.ratio) + '%</span><span class="muted"><span class="mono">' + a.count + ' / ' + a.denominator + '</span> 關</span>' : '<span class="muted">' + (opened ? '尚未開放' : '未安排關卡') + '</span>') + '</span></li>').join('');
     $('chart-note').textContent = '以各主題「' + (opened ? '已開放' : '全學期') + '關數」為分母；同一關可對應多個主題，主題關次不等於總過關數。';

@@ -21,21 +21,21 @@
 
 .wall{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .cell{border:2px solid var(--line);background:var(--bg);border-radius:0;padding:6px 10px;display:flex;flex-direction:column;transition:border-color .2s,background .2s}
-.cell .addr{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
-.cell .lab{font-size:14px;color:var(--muted)}
+.cell .addr{font-family:var(--f-mono);font-size:var(--text-min,17px);color:var(--muted)}
+.cell .lab{font-size:var(--text-min,17px);color:var(--muted)}
 .cell .val{font-family:var(--f-mono);font-size:22px;font-weight:700;color:var(--mem);min-height:1.3em}
 .cell.hit{border-color:var(--mem);background:var(--mem-soft)}
 .power{display:flex;gap:8px;flex-wrap:wrap}
 
 .pool,.slots{display:flex;flex-direction:column;gap:8px}
 .pool{flex-direction:row;flex-wrap:wrap}
-.card{font:inherit;font-size:16px;text-align:left;border:2px solid var(--line);background:var(--bg);color:var(--ink);border-radius:0;padding:9px 12px;cursor:pointer;line-height:1.35}
+.card{font:inherit;font-size:var(--text-min,17px);text-align:left;border:2px solid var(--line);background:var(--bg);color:var(--ink);border-radius:0;padding:9px 12px;cursor:pointer;line-height:1.35}
 .card:hover{border-color:var(--ink)}
 .card.used{visibility:hidden}
 .slot{display:flex;align-items:center;gap:10px;min-height:48px}
 .slot .n{flex:none;width:30px;height:30px;border-radius:0;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-weight:700;font-family:var(--f-mono)}
 .slot .card{flex:1}
-.slot .empty{flex:1;border:2px dashed var(--line);border-radius:0;min-height:44px;display:flex;align-items:center;padding-inline:12px;color:var(--muted);font-size:14px}
+.slot .empty{flex:1;border:2px dashed var(--line);border-radius:0;min-height:44px;display:flex;align-items:center;padding-inline:12px;color:var(--muted);font-size:var(--text-min,17px)}
 .slot.now .card{border-color:var(--cu);background:var(--cu-soft)}
 .slot.bad .card{border-color:var(--warn)}
 
@@ -45,7 +45,7 @@
 .cpu-unit{border-left:6px solid var(--line);min-height:120px}
 .cpu-unit.cu{border-left-color:var(--cu)} .cpu-unit.alu{border-left-color:var(--alu)} .cpu-unit.outp{border-left-color:var(--teach-output)}
 .cpu-unit.on.cu{--surface:var(--cu-soft)} .cpu-unit.on.alu{--surface:var(--alu-soft)} .cpu-unit.on.outp{--surface:var(--out-soft)}
-.cpu-unit .say{font-size:16px;min-height:3em}
+.cpu-unit .say{font-size:var(--text-min,17px);min-height:3em}
 .hand{font-family:var(--f-mono);font-size:30px;font-weight:700;color:var(--alu);line-height:1}
 .outv{font-size:24px;font-weight:700;color:var(--teach-output)}
 .outv.no{color:var(--warn)}
@@ -158,7 +158,7 @@ function renderCards(now,bad){
     const k=slots[i];
     h+='<div class="slot'+(i===now?(bad?' now bad':' now'):'')+'"><span class="n">'+(i+1)+'</span>'+(k==null?'<span class="empty">放第 '+(i+1)+' 張</span>':'<button type="button" class="card" data-s="'+i+'">'+R.cards[k].t+'</button>')+'</div>';
   }
-  $('slots').innerHTML=h+'<p class="small" id="full-msg" role="status" hidden style="color:var(--warn);font-size:15px">順序格已經滿了。想換卡片，先點格子裡的卡片拿回去。</p>';
+  $('slots').innerHTML=h+'<p class="small" id="full-msg" role="status" hidden style="color:var(--warn);font-size:var(--text-min,17px)">順序格已經滿了。想換卡片，先點格子裡的卡片拿回去。</p>';
   $('slots').querySelectorAll('.card').forEach(b=>b.onclick=()=>{if(running)return;slots.splice(+b.dataset.s,1);resetStage();renderCards()});
   if(slots.length>n)slots.length=n;
   $('b-run').disabled=running||slots.length!==n;

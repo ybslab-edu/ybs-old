@@ -55,10 +55,10 @@ function setup(gen, options={}) {
   const nodes = new Map();
   const get = id => {
     if (!nodes.has(id)) nodes.set(id,{value:'',hidden:false,innerHTML:'',textContent:'',
-      addEventListener(){},setAttribute(){},focus(){},querySelectorAll:()=>[],querySelector:()=>({})});
+      addEventListener(){},append(){},prepend(){},setAttribute(){},focus(){},querySelectorAll:()=>[],querySelector:()=>({})});
     return nodes.get(id);
   };
-  const c=vm.createContext({document:{body:{insertAdjacentHTML(){}},getElementById:get},window:{},
+  const c=vm.createContext({document:{body:{insertAdjacentHTML(){},addEventListener(){}},getElementById:get},window:{},
     TEACHER:{remembered:()=>false},localStorage:{getItem:()=>null,setItem(){}}});
   vm.runInContext(shell+'\nglobalThis.makeShell=SHELL;',c);
   let correct=true,answer=0;

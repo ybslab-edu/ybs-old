@@ -1,18 +1,51 @@
-/* 沿用任務日誌的面板、表格與輸入欄；色彩只引用共用變數。 */
-.quest-note{border-left:3px solid var(--ember);padding:calc(var(--u)*2);background:var(--panel);margin-bottom:calc(var(--u)*2)}
-.quest-note p{margin:var(--u) 0}
-.quest-table{width:100%;border-collapse:collapse;table-layout:fixed}
-.quest-table th,.quest-table td{padding:var(--u);border:1px solid var(--edge);text-align:left;overflow-wrap:anywhere}
-.quest-table caption{text-align:left;font-weight:700;margin-block:var(--u)}
-.quest-answers{display:grid;gap:calc(var(--u)*2);margin-top:calc(var(--u)*2)}
-.quest-answers label{display:grid;gap:var(--u);min-width:0}
-.quest-answers input,.quest-answers select{font:inherit;width:100%;min-width:0;min-height:44px;border:2px solid var(--edge);border-radius:0;background:var(--panel-hi);color:var(--text);padding:var(--u)}
-.quest-attach{border-top:1px solid var(--edge);padding-top:calc(var(--u)*2)}
-
-@media(max-width:559px){
-.quest-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
-.quest-table tr{display:block;margin-bottom:var(--u);border:1px solid var(--edge)}
-.quest-table td{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:var(--u);border:0;border-bottom:1px solid var(--edge)}
-.quest-table td::before{content:attr(data-label);font-weight:700}
-}
-body :focus-visible{outline:3px solid var(--text);outline-offset:3px}
+/* 只作用於本活動；圖表的灰階類別搭配文字、數值及圖例。 */
+.u206-sheet{min-width:0;max-width:100%;overflow-wrap:anywhere}
+.u206-sheet .quest-note{border-left:3px solid var(--ember);padding:calc(var(--u)*2);background:var(--panel);margin-bottom:calc(var(--u)*2)}
+.u206-sheet .quest-note p{margin:var(--u) 0}
+.u206-sheet .sheet-step{border-top:1px solid var(--edge);padding-block:calc(var(--u)*2);min-width:0}
+.u206-sheet h4{font-size:var(--text-subtitle,22px);margin:0 0 var(--u)}
+.u206-sheet p{margin:var(--u) 0}
+.u206-sheet details{margin-block:calc(var(--u)*2);min-width:0}
+.u206-sheet summary{cursor:pointer;min-height:44px;padding-block:var(--u);font-weight:700}
+/* 空白格的絕對定位輔助文字也須留在捲動範圍，避免右側欄位撐寬整頁。 */
+.u206-sheet .sheet-scroll{position:relative;min-width:0;max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;margin-block:calc(var(--u)*2);padding:3px}
+.u206-sheet .quest-table{border-collapse:collapse;width:100%;min-width:36rem;font-variant-numeric:tabular-nums}
+.u206-sheet .sheet-grid{min-width:72rem}
+.u206-sheet .quest-table th,.u206-sheet .quest-table td{padding:var(--u);border:1px solid var(--edge);text-align:left;vertical-align:middle;color:var(--text)}
+.u206-sheet .quest-table thead th{background:var(--panel-hi);font-weight:700}
+.u206-sheet .quest-table caption{text-align:left;font-weight:700;margin-bottom:var(--u);color:var(--text)}
+.u206-sheet .sheet-grid th[scope=row]{background:var(--panel);font-weight:700}
+.u206-sheet .sheet-mark{background:var(--panel-hi);outline:2px solid var(--dim);outline-offset:-3px}
+.u206-sheet .sheet-mark small{display:block;font-size:max(var(--text-min,17px),.75rem);font-weight:700;color:var(--text)}
+.u206-sheet .quest-answers,.u206-sheet .sheet-controls{display:grid;gap:var(--u);min-width:0;margin-block:var(--u)}
+.u206-sheet label{font-weight:700;min-width:0}
+.u206-sheet input[type=number],.u206-sheet select{font:inherit;min-height:44px;width:100%;max-width:100%;min-width:0;padding:var(--u);border:2px solid var(--edge);border-radius:0;background:var(--panel-hi);color:var(--text)}
+.u206-sheet select{white-space:normal}
+.u206-sheet .sheet-actions{display:flex;flex-wrap:wrap;gap:var(--u);margin-block:var(--u)}
+.u206-sheet .btn{white-space:normal;min-height:44px;max-width:100%}
+.u206-sheet fieldset{border:1px solid var(--edge);margin:var(--u) 0;padding:var(--u);min-width:0}
+.u206-sheet legend{font-weight:700}
+.u206-sheet .sheet-check{display:flex;align-items:center;gap:var(--u);min-height:44px;padding:var(--u)}
+.u206-sheet input[type=checkbox]{width:22px;height:22px;flex-shrink:0;accent-color:var(--text)}
+.u206-sheet .sheet-pick{display:flex;align-items:center;justify-content:center;min-height:44px;min-width:44px}
+.u206-sheet .sheet-stats{display:grid;grid-template-columns:minmax(0,1fr) minmax(5rem,1fr);gap:var(--u);align-items:center}
+.u206-sheet .sheet-percent{display:flex;align-items:center;gap:var(--u);max-width:10rem}
+.u206-sheet .sheet-pie{width:160px;height:160px;max-width:100%;border-radius:50%;margin:calc(var(--u)*2) 0;border:1px solid var(--text)}
+.u206-sheet figure{margin:calc(var(--u)*2) 0;min-width:0}
+.u206-sheet .sheet-legend{list-style:none;padding:0}
+.u206-sheet .sheet-legend li{display:flex;align-items:center;gap:var(--u);margin-block:var(--u)}
+.u206-sheet .sheet-swatch{width:1rem;height:1rem;flex-shrink:0;border:1px solid var(--text)}
+.u206-sheet .sheet-job-0{background:var(--text)}
+.u206-sheet .sheet-job-1{background:var(--dim)}
+.u206-sheet .sheet-job-2{background:var(--edge)}
+.u206-sheet .sheet-bars>div{display:grid;gap:var(--u);margin-block:calc(var(--u)*2)}
+.u206-sheet .sheet-track{height:1rem;display:block;background:var(--panel-hi)}
+.u206-sheet .sheet-track i{display:block;height:100%;max-width:100%}
+.u206-sheet .sheet-demand{background:var(--dim)}
+.u206-sheet .sheet-replies{background:var(--text)}
+.u206-sheet .sheet-status,.u206-sheet .sheet-empty{border:1px solid var(--edge);padding:calc(var(--u)*2)}
+.u206-sheet :focus-visible{outline:3px solid var(--text);outline-offset:3px}
+/* 左側原列與勾選保持可見，讓你捲到右側欄位時仍能選取同一列。 */
+.u206-sheet .sheet-grid tr>:first-child{position:sticky;left:0;z-index:1;background:var(--panel)}
+.u206-sheet .sheet-select tr>:first-child{width:64px;min-width:64px;z-index:2}
+.u206-sheet .sheet-select tr>:nth-child(2){position:sticky;left:64px;z-index:1;background:var(--panel)}

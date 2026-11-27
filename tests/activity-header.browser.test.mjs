@@ -1,3 +1,4 @@
+import {previewBase} from './fixtures/preview-site.mjs';
 // 只讀本機頁面；略過登入 SDK，以合成教師示範模式檢查排版，不接觸 Firebase。
 import {test,before,after} from 'node:test';
 import assert from 'node:assert/strict';
@@ -7,6 +8,7 @@ import {resolve,extname,sep} from 'node:path';
 import {fileURLToPath} from 'node:url';
 const {chromium}=await import(process.env.PLAYWRIGHT_MODULE||'playwright');
 const root=resolve(fileURLToPath(new URL('../',import.meta.url)));
+const trimShots=process.env.PORT_SHOTS_DIR?process.env.PORT_SHOTS_DIR+'/activity-header':'/tmp/ybs-trim-shots';
 let server,browser,base;
 before(async()=>{
   server=createServer(async(req,res)=>{
@@ -16,7 +18,7 @@ before(async()=>{
     try{res.setHeader('Content-Type',({'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml'})[extname(path)]||'application/octet-stream');res.end(await readFile(path))}
     catch{res.writeHead(404).end()}
   });
-  await new Promise((ok,no)=>{server.once('error',no);server.listen(0,'127.0.0.1',ok)});base='http://127.0.0.1:'+server.address().port;
+  base = await previewBase(server);
   browser=await chromium.launch({headless:true});
 });
 after(async()=>{await browser?.close();if(server?.listening)await new Promise(ok=>server.close(ok))});
@@ -38,7 +40,8 @@ for(const width of [1280,390])test(`30 活動共用標題與關卡切換，${wid
       count++;
       await page.goto(base+'/115-g9/'+dir+'/');
       await page.locator('#main').waitFor({state:'visible'});
-      assert.match(await page.locator('#main h1').textContent(),/^第 \d+ 週｜/);
+      assert.doesNotMatch(await page.locator('#main h1').textContent(),/^第 \d+ 週｜/);
+      assert.match(await page.locator('.activity-week').textContent(),/^第 \d+ 週$/);
       assert.equal(await page.locator('nav.unit, [role=tablist]').count(),0);
       const rounds=dir==='u2-03'?5:4;
       assert.equal(await page.locator('#rounds button').count(),rounds);
@@ -102,7 +105,7 @@ for(const width of [1280,390])test(`提示標題列、頁首重試與成功截�
     assert.equal(await page.locator('#b-hint').isDisabled(),false);
     await page.click('#b-hint');assert.match(await page.locator('#hint-content').textContent(),/第 1 層/);
     assert.equal(await page.locator('#b-retry').isVisible(),false);
-    await mkdir('/tmp/ybs-trim-shots',{recursive:true});
+    await mkdir(trimShots,{recursive:true});
     for(const state of ['ok','pending','guest-pending','guest-storage','sending']){
       await page.evaluate(st=>uploadStatus(st),state);
       const retry=['pending','guest-pending','guest-storage'].includes(state);
@@ -115,7 +118,7 @@ for(const width of [1280,390])test(`提示標題列、頁首重試與成功截�
             return {order:a.nextElementSibling===b,space:br.left>=ar.right||br.top>=ar.bottom,font:x.fontSize===y.fontSize,border:x.borderWidth===y.borderWidth,radius:x.borderRadius===y.borderRadius};
           });assert.deepEqual(layout,{order:true,space:true,font:true,border:true,radius:true});
         }
-        await page.screenshot({path:`/tmp/ybs-trim-shots/${width}-${state==='ok'?'success':'retry'}.png`,fullPage:true});
+        await page.screenshot({path:`${trimShots}/${width}-${state==='ok'?'success':'retry'}.png`,fullPage:true});
       }
     }
     await page.evaluate(()=>uploadStatus('pending'));await page.click('#b-retry');

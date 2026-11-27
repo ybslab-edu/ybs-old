@@ -27,10 +27,11 @@ class Element {
       if (tag) {
         const el = new Element(tag);
         for (const [, key, value] of token.matchAll(/([\w-]+)="([^"]*)"/g)) el.setAttribute(key, decode(value));
-        stack.at(-1).childNodes.push(el);
+        el.parentElement=stack.at(-1);stack.at(-1).childNodes.push(el);
         if (!['br', 'hr', 'img', 'input'].includes(tag)) stack.push(el);
       } else stack.at(-1).childNodes.push(textNode(decode(token)));
     }
+    root.childNodes.forEach(n=>n.parentElement=this);
     if (position === 'afterbegin') this.childNodes.unshift(...root.childNodes);
     else this.childNodes.push(...root.childNodes);
   }
@@ -48,6 +49,8 @@ class Element {
   }
   querySelector(selector) { return this.querySelectorAll(selector)[0] || null; }
   addEventListener() {}
+  prepend(el){if(el.parentElement){const a=el.parentElement.childNodes;a.splice(a.indexOf(el),1)}el.parentElement=this;this.childNodes.unshift(el)}
+  append(el){if(el.parentElement){const a=el.parentElement.childNodes;a.splice(a.indexOf(el),1)}el.parentElement=this;this.childNodes.push(el)}
   focus() {}
 }
 

@@ -12,22 +12,22 @@
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15181C;--surface:#1E2228;--ink:#ECEFF2;--muted:#9AA3AD;--line:#333A42;--accent:#82B2EC;--ok:#6FC995;--ok-soft:#1A3325;--bad:#F2897F;--bad-soft:#3A1F1D;color-scheme:dark}}
 :root[data-theme="dark"]{--bg:#15181C;--surface:#1E2228;--ink:#ECEFF2;--muted:#9AA3AD;--line:#333A42;--accent:#82B2EC;--ok:#6FC995;--ok-soft:#1A3325;--bad:#F2897F;--bad-soft:#3A1F1D;color-scheme:dark}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;font-size:16px;line-height:1.6}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;font-size:var(--text-body,18px);line-height:1.6}
 .wrap{max-width:680px;margin:0 auto;padding:24px 16px 48px;display:flex;flex-direction:column;gap:14px}
 h1{font-size:24px;margin:0}.sub{color:var(--muted);margin:0}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px}
 h2{font-size:17px;margin:0}
-label{font-size:14px;color:var(--muted)}
-input{font:inherit;font-family:ui-monospace,Consolas,monospace;font-size:13px;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+label{font-size:var(--text-min,17px);color:var(--muted)}
+input{font:inherit;font-family:ui-monospace,Consolas,monospace;font-size:var(--text-min,17px);width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
 button{font:inherit;font-weight:700;padding:8px 16px;border-radius:8px;border:1px solid var(--ink);background:var(--ink);color:var(--bg);cursor:pointer;align-self:flex-start}
 button:disabled{opacity:.4;cursor:not-allowed}
 button.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
-.res{border-radius:8px;padding:10px 12px;font-size:15px}
+.res{border-radius:8px;padding:10px 12px;font-size:var(--text-min,17px)}
 .res.ok{background:var(--ok-soft);color:var(--ok)}.res.bad{background:var(--bad-soft);color:var(--bad)}
 .res dl{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;margin:6px 0 0;color:var(--ink)}
 .res dt{color:var(--muted)}.res dd{margin:0;word-break:break-all}
 ol{margin:0;padding-left:1.3em}
-.note{font-size:14px;color:var(--muted)}
+.note{font-size:var(--text-min,17px);color:var(--muted)}
 </style>
 </head>
 <body>

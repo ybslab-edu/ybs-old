@@ -20,7 +20,7 @@ function dom(){
     querySelectorAll(){return [];}
     querySelector(selector){return selector.startsWith('#')?null:new Element();}
     setAttribute(k,v){this[k]=v;}
-    focus(){} appendChild(){} remove(){}
+    focus(){} appendChild(){} append(){} prepend(){} remove(){}
   }
   return {get,document:{getElementById:get,createElement:()=>new Element(),body:new Element()}};
 }

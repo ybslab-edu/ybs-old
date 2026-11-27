@@ -42,6 +42,7 @@ class Element {
     this[key === 'class' ? 'className' : key] = String(value);
     if (key.startsWith('data-')) this.dataset[key.slice(5)] = String(value);
   }
+  getAttribute(key){return this[key === 'class' ? 'className' : key] ?? null}
   querySelectorAll(selector) {
     const result = [];
     const visit = parent => parent.childNodes.filter(n => n.nodeType === 1).forEach(el => {
@@ -63,6 +64,7 @@ class Element {
     return !selector||this.tagName===selector.toUpperCase();
   }
   closest(selector){return this.matches(selector)?this:this.parentElement?.closest(selector)||null}
+  prepend(el){if(el.parentElement){const a=el.parentElement.childNodes;a.splice(a.indexOf(el),1)}el.parentElement=this;this.childNodes.unshift(el)}
   append(el){if(el.parentElement){const a=el.parentElement.childNodes;a.splice(a.indexOf(el),1)}el.parentElement=this;this.childNodes.push(el)}
   get previousElementSibling(){const a=this.parentElement.childNodes.filter(n=>n.nodeType===1);return a[a.indexOf(this)-1]}
   scrollIntoView(){}
@@ -139,7 +141,7 @@ test('錯答不過、播放開始記次、一次雙資料過關、僅新過關�
 
 test('儲存失敗顯示 shell 提示；教師暫停、前後步、跳步、停止、鍵盤且不記分',()=>{
   const h=setup({failSave:true});h.play();assert.match(h.get('sync').textContent,/這台電腦沒辦法存下進度/);
-  assert.match(h.get('rounds').textContent,/✓/);assert.equal(h.uploads.length,1);
+  assert.match(h.get('rounds').querySelector('button').getAttribute('aria-label'),/（已過關）/);assert.equal(h.uploads.length,1);
   const t=setup({teacher:true});t.evaluate('APP.handle.fill();play()');
   t.get('tb-play').onclick();assert.equal(t.evaluate('pb.paused'),true);
   t.get('tb-next').onclick();assert.equal(t.evaluate('pb.i'),1);

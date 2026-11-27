@@ -1,3 +1,5 @@
+import {previewBase, previewPath, cleanPreview} from './fixtures/preview-site.mjs';
+// u2-06 模擬操作另由 u2-06-sheet.browser.test.mjs 驗證。
 // 實際頁面與素材只由 127.0.0.1 提供；登入、教師與鎖為合成替身。
 import {test,before,after} from 'node:test';
 import assert from 'node:assert/strict';
@@ -13,22 +15,22 @@ before(async()=>{
  if(path==='/assets/shell.css')data=Buffer.from(data.toString().replace(/^@import.*$/gm,''));
  res.setHeader('Content-Type',({'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css','.png':'image/png','.jpg':'image/jpeg','.pdf':'application/pdf','.zip':'application/zip'})[ext]||'application/octet-stream');res.end(data);
  }catch{res.statusCode=404;res.end()}});
- await new Promise((done,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',done)});base='http://127.0.0.1:'+server.address().port;
+ base = await previewBase(server);
  browser=await chromium.launch({headless:true});
 });
 after(async()=>{await browser?.close();if(server?.listening)await new Promise(r=>server.close(r));assert.deepEqual(outside,[],'無對外請求')});
 async function pageFor(width,dir){
  const page=await browser.newPage({viewport:{width,height:950},serviceWorkers:'block'});
  await page.route('**/*',r=>{
-  const u=new URL(r.request().url());if(u.origin!==base){outside.push(u.origin);return r.abort()}
-  if(u.pathname==='/assets/teacher.js')return r.fulfill({contentType:'text/javascript',body:'window.TEACHER={remembered:()=>true,remember(){}};'});
-  if(['/assets/login.js','/assets/lock.js'].includes(u.pathname))return r.fulfill({contentType:'text/javascript',body:'// offline synthetic boundary'});
-  return r.continue();
+  const u=new URL(r.request().url());if(u.origin!==new URL(base).origin){outside.push(u.origin);return r.abort()}
+  if(previewPath(u.pathname)==='/assets/teacher.js')return r.fulfill({contentType:'text/javascript',body:'window.TEACHER={remembered:()=>true,remember(){}};'});
+  if(['/assets/login.js','/assets/lock.js'].includes(previewPath(u.pathname)))return r.fulfill({contentType:'text/javascript',body:'// offline synthetic boundary'});
+  return cleanPreview(r);
  });
  await page.goto(base+'/115-g9/'+dir+'/');await page.waitForSelector('#stage .quest-answers');return page;
 }
-for(const width of [360,560,1280])test(`兩單元四關 ${width}px：成果、空答、錯答修正、兩組、素材與鍵盤焦點`,async()=>{
- for(const dir of ['u2-06','u2-07']){
+for(const width of [360,560,1280])test(`u2-07四關 ${width}px：成果、空答、錯答修正、兩組、素材與鍵盤焦點`,async()=>{
+ for(const dir of ['u2-07']){
   const page=await pageFor(width,dir),errors=[];page.on('pageerror',e=>errors.push(e.message));
   try{
    for(let r=0;r<4;r++){
@@ -37,7 +39,9 @@ for(const width of [360,560,1280])test(`兩單元四關 ${width}px：成果、�
     if(dir==='u2-07'){assert.match(await page.locator('.quest-note').textContent(),/今天必做第 1、2 關/);assert.match(await page.locator('#says').textContent(),/你/)}
     assert.equal(await page.locator('.quest-attach').isVisible(),true);
     assert.match(await page.locator('.quest-attach').textContent(),/本組委託附件/);
-    assert.equal(await page.locator('[data-fallback],details').count(),0);
+    // 備用素材不得回流；只允許共用頁首新增的帳號 details，其他 details 仍禁止。
+    assert.equal(await page.locator('details#account > summary#account-toggle').count(),1);
+    assert.equal(await page.locator('[data-fallback],details:not(#account)').count(),0);
     assert.doesNotMatch(await page.locator('#stage').textContent(),/備用素材|未實際操作/);
     assert.equal(await page.evaluate(d=>localStorage.getItem('ybs:'+d+':fallback:v1'),dir),null);
     assert.equal(await page.locator('#b-send').isDisabled(),true);
@@ -56,7 +60,7 @@ for(const width of [360,560,1280])test(`兩單元四關 ${width}px：成果、�
    }
    await page.evaluate(()=>APP.load(0));await page.locator('[data-answer="0"]').focus();await page.keyboard.press('Tab');
    assert.notEqual(await page.evaluate(()=>getComputedStyle(document.activeElement).outlineStyle),'none');
-   if(width===360)await page.screenshot({path:'/tmp/'+dir+'-360.png',fullPage:true});
+   if(width===360)await page.screenshot({path:(process.env.PORT_SHOTS_DIR||'/tmp')+'/'+dir+'-360.png',fullPage:true});
    assert.deepEqual(errors,[]);
   }finally{await page.close()}
  }

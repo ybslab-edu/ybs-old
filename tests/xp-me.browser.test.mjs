@@ -1,3 +1,4 @@
+import {previewBase, cleanPreview} from './fixtures/preview-site.mjs';
 // 全部為合成資料；禁止任何本機伺服器以外的網路請求。
 import {test,before,after} from 'node:test';
 import assert from 'node:assert/strict';
@@ -6,6 +7,9 @@ import {readFile,mkdir} from 'node:fs/promises';
 import {teacherFirebase} from './fixtures/me-teacher.mjs';
 import {sessionFirebase} from './fixtures/login-session.mjs';
 const {chromium}=await import(process.env.PLAYWRIGHT_MODULE||'playwright');
+const implShots=process.env.PORT_SHOTS_DIR?process.env.PORT_SHOTS_DIR+'/me-impl':'/tmp/ybs-me-impl-shots';
+const teacherShots=process.env.PORT_SHOTS_DIR?process.env.PORT_SHOTS_DIR+'/me-teacher':'/tmp/ybs-me-teacher-shots';
+const iconShots=process.env.PORT_SHOTS_DIR?process.env.PORT_SHOTS_DIR+'/me-icon':'/tmp/ybs-me-icon-shots';
 let browser,server,base;
 const mock=`(() => {
   let profile=null;
@@ -36,11 +40,11 @@ before(async()=>{
     // 保留成長頁的新字型連結；活動頁舊字族不屬本測試範圍，共用外框的新字型仍由白名單驗證。
     res.end(path==='/115-g9/u2-03/index.html' ? source.replace(/<link[^>]+https:\/\/fonts\.googleapis\.com[^>]*>/g,'') : source);
   });
-  await new Promise(ok=>server.listen(0,'127.0.0.1',ok));base='http://127.0.0.1:'+server.address().port;
+  base = await previewBase(server);
   browser=await chromium.launch({headless:true});
-  await mkdir('/tmp/ybs-me-impl-shots',{recursive:true});
-  await mkdir('/tmp/ybs-me-teacher-shots',{recursive:true});
-  await mkdir('/tmp/ybs-me-icon-shots',{recursive:true});
+  await mkdir(implShots,{recursive:true});
+  await mkdir(teacherShots,{recursive:true});
+  await mkdir(iconShots,{recursive:true});
 });
 after(async()=>{await browser?.close();if(server?.listening)await new Promise(ok=>server.close(ok))});
 async function pageFor(t,options={},suffix='',context){
@@ -50,6 +54,8 @@ async function pageFor(t,options={},suffix='',context){
   page.on('pageerror',e=>errors.push(e.message));
   page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
   await page.route('**/*',r=>{
+    if(r.request().url().startsWith(base+'/assets/login.js') && !r.request().headers().referer?.endsWith('?real-login') && !r.request().headers().referer?.includes('cls=')) return r.fulfill({contentType:'text/javascript',body:mock});
+    if(r.request().url().startsWith(base+'/115-g9/u2-03/')) return cleanPreview(r);
     if(r.request().url().startsWith(base+'/'))return r.continue();
     // 真正登入入口會主動還原 Auth；SDK 由離線替身提供，支援 LOCAL 跨分頁同步。
     if(r.request().url().startsWith('https://www.gstatic.com/firebasejs/10.14.1/'))return r.fulfill({contentType:'text/javascript',body:r.request().url().endsWith('/firebase-app-compat.js')?(page.url().includes('cls=')?teacherFirebase:sessionFirebase):'// offline mock'});
@@ -72,7 +78,7 @@ for(const width of [1440,390]){
     const box=await icon.boundingBox();
     assert.ok(box && box.width>0 && box.width<=24 && box.height>0 && box.height<=24,
       `密碼眼睛圖示尺寸：${JSON.stringify(box)}`);
-    await page.screenshot({path:`/tmp/ybs-me-icon-shots/signin-${width===390?'390':'desktop'}.png`,fullPage:true});
+    await page.screenshot({path:`${iconShots}/signin-${width===390?'390':'desktop'}.png`,fullPage:true});
   });
 }
 test('沿用真正登入元件；未登入及班座本機紀錄不觸發雲端或顯示 XP',async t=>{
@@ -119,7 +125,7 @@ for(const [width,colorScheme,reducedMotion] of [[1440,'light','no-preference'],[
     // 任務日誌主題只做深色：不論系統偏好，底色都是同一個
     assert.equal(await page.locator('body').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(18, 21, 28)');
     const name=colorScheme==='dark'?'dark':width===390?'mobile':'desktop';
-    await page.screenshot({path:'/tmp/ybs-me-impl-shots/'+name+'.png',fullPage:true});
+    await page.screenshot({path:implShots+'/'+name+'.png',fullPage:true});
     await page.click('#xp-details > summary');
     const xpSummary=page.locator('#details > .xp-item > summary').filter({hasText:'深夜手搖店'});
     await xpSummary.click();
@@ -128,7 +134,7 @@ for(const [width,colorScheme,reducedMotion] of [[1440,'light','no-preference'],[
     await xpSummary.click();await page.click('#xp-details > summary');
     if(width===390){
       await page.click('#route-tab');
-      await page.screenshot({path:'/tmp/ybs-me-impl-shots/mobile-route.png',fullPage:true});
+      await page.screenshot({path:implShots+'/mobile-route.png',fullPage:true});
     }
     await page.click('#logout');
     assert.equal(await page.locator('#growth').isVisible(),false);
@@ -263,17 +269,18 @@ test('提早開放清單與共同日期規則皆納入；路線週次由 date �
   assert.match(await page.locator('.station[data-activity="1"] .week-label').getAttribute('aria-label'),/第 7 週/);
 });
 
-test('真實活動頁 C3 標題列、等級條與成長連結；本機截圖',async t=>{
+test('真實活動頁核准頁首、選單等級條與成長連結；本機截圖',async t=>{
   const page=await pageFor(t,{viewport:{width:1440,height:1000}});
   await page.goto(base+'/115-g9/u2-03/');
   await page.click('#mock-login');await page.click('#g-isme');
   await page.waitForFunction(()=>document.getElementById('xp-total').textContent==='90 XP');
   assert.equal(await page.locator('#xp-link').getAttribute('href'),'../me/');
-  // 任務日誌經驗條為 10px、面板灰邊與斜體窄數字，沿用新主題的字型後備。
-  assert.equal(await page.locator('#xp-progress').evaluate(el=>getComputedStyle(el).height),'10px');
-  assert.equal(await page.locator('header.top').evaluate(el=>getComputedStyle(el).borderTopColor),'rgb(59, 69, 92)');
-  assert.equal(await page.locator('#xp-total').evaluate(el=>getComputedStyle(el).fontFamily.includes('Barlow Condensed')),true);
-  await page.locator('header.top').screenshot({path:'/tmp/ybs-me-impl-shots/activity-header.png'});
+  // 經驗條移入選單；頁首使用不裁切的背景與正文字型。
+  await page.click('#account-toggle');
+  assert.equal(await page.locator('#xp-progress').evaluate(el=>getComputedStyle(el).height),'6px');
+  assert.equal(await page.locator('header.top').evaluate(el=>getComputedStyle(el).clipPath),'none');
+  assert.equal(await page.locator('#xp-total').evaluate(el=>getComputedStyle(el).fontFamily.includes('Noto Sans TC')),true);
+  await page.locator('header.top').screenshot({path:implShots+'/activity-header.png'});
 });
 
 test('全過與多主題徽章：最高等級、無待挑戰活動及換人重設',async t=>{
@@ -323,11 +330,11 @@ for(const [width,colorScheme] of [[1440,'light'],[1440,'dark'],[390,'light']]){
     assert.ok(await page.locator('.row-break').count()>0);
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
     const name=colorScheme==='dark'?'dark':width===390?'mobile':'desktop';
-    await page.screenshot({path:'/tmp/ybs-me-impl-shots/'+name+'.png',fullPage:true});
+    await page.screenshot({path:implShots+'/'+name+'.png',fullPage:true});
     if(width===390){
       await page.click('#route-tab');
       assert.equal(await page.locator('#route > .timeline .row-break').first().isVisible(),false);
-      await page.screenshot({path:'/tmp/ybs-me-impl-shots/mobile-route.png',fullPage:true});
+      await page.screenshot({path:implShots+'/mobile-route.png',fullPage:true});
     }
   });
 }
@@ -404,7 +411,7 @@ for (const width of [1440,390]) {
     assert.match(await page.locator('.teacher-round').nth(1).textContent(),/補做/);
     assert.match(await page.locator('.teacher-round').nth(4).textContent(),/時間不明/);
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
-    await page.screenshot({path:'/tmp/ybs-me-teacher-shots/teacher-'+(width===1440?'desktop':'mobile')+'.png',fullPage:true});
+    await page.screenshot({path:teacherShots+'/teacher-'+(width===1440?'desktop':'mobile')+'.png',fullPage:true});
     await page.evaluate(()=>meTeacherMock.login(null));
     assert.equal(await page.locator('#growth').isVisible(),false);
     assert.equal(await page.locator('#details').textContent(),'');
@@ -419,7 +426,7 @@ test('非擁有者與學生帶參數皆拒絕，不讀名冊或他人 attempts',
     assert.equal(await page.locator('#growth').isVisible(),false);
   }
   assert.ok((await page.evaluate(()=>meTeacherMock.reads)).every(r=>r.path==='ybsCourses/115-g9'));
-  await page.screenshot({path:'/tmp/ybs-me-teacher-shots/denied.png',fullPage:true});
+  await page.screenshot({path:teacherShots+'/denied.png',fullPage:true});
 });
 test('教師名冊查無班座與重複班座均有明確訊息',async t=>{
   const page=await pageFor(t,{},'?cls=999&seat=1');

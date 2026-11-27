@@ -24,7 +24,7 @@ const OPEN = {
     d.innerHTML = '<div style="max-width:480px;min-width:0;padding:32px 24px;background:var(--panel);border:2px solid var(--edge);clip-path:polygon(0 0,calc(100% - var(--cut)) 0,100% var(--cut),100% 100%,var(--cut) 100%,0 calc(100% - var(--cut)))"><div style="display:none">🔒</div><h1 style="font-size:26px;font-weight:900;margin:8px 0">' + (courseClosed ? '本學年未開設這門課' : '這個活動還沒開放') + '</h1>'
       + '<p style="color:var(--dim);margin:0 0 20px">請回到 YBS Lab 首頁，做老師這週指定的活動。</p>'
       + '<p><a href="/ybs-old/" style="display:inline-block;max-width:100%;padding:10px 24px;background:var(--ember);color:var(--on-ember);font-weight:700;text-decoration:none;outline-offset:-4px;clip-path:polygon(var(--slant) 0,100% 0,calc(100% - var(--slant)) 100%,0 100%)">← 回 YBS Lab 首頁</a></p>'
-      + '<p style="margin-top:28px"><button type="button" id="ybs-unlock" style="background:none;border:0;color:var(--dim);font:inherit;font-size:14px;text-decoration:underline;cursor:pointer">教師解鎖</button></p></div>';
+      + '<p style="margin-top:28px"><button type="button" id="ybs-unlock" style="background:none;border:0;color:var(--dim);font:inherit;font-size:var(--text-min,17px);text-decoration:underline;cursor:pointer">教師解鎖</button></p></div>';
     document.body.appendChild(d);
     document.getElementById('ybs-unlock').onclick = async () => {
       const code = prompt('教師通行碼');

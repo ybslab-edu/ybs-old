@@ -1,3 +1,4 @@
+import {previewBase} from './fixtures/preview-site.mjs';
 // 真正活動頁 ↔ me 頁；SDK 全由 route.fulfill 提供合成替身，禁止外部網路。
 import {test,before,after} from 'node:test';
 import assert from 'node:assert/strict';
@@ -19,12 +20,11 @@ before(async () => {
       res.end(await readFile(path));
     } catch { res.writeHead(404).end(); }
   });
-  await new Promise(ok => server.listen(0,'127.0.0.1',ok));
-  base = 'http://127.0.0.1:' + server.address().port;
+  base = await previewBase(server);
   browser = await chromium.launch({headless:true});
 });
 after(async () => {await browser?.close();if (server?.listening) await new Promise(ok => server.close(ok));});
-async function pageFor(t,{hold = false} = {}) {
+async function pageFor(t,{hold = false,dfProbe = false} = {}) {
   const context = await browser.newContext({serviceWorkers:'block'});
   context.setDefaultTimeout(3000);
   t.after(() => context.close());
@@ -32,6 +32,9 @@ async function pageFor(t,{hold = false} = {}) {
   context.on('page',page => page.on('pageerror',e => errors.push(e.message)));
   await context.route('**/*',route => {
     const url = route.request().url();
+    // DF 靜態教師頁原本就會探測根目錄 API；精確模擬靜態站的 404，不放行網路。
+    if (dfProbe && route.request().method() === 'GET' && url === new URL('/api/ping',base).href)
+      return route.fulfill({status:404,body:''});
     if (url.startsWith(base + '/')) return route.continue();
     if (url.startsWith('https://www.gstatic.com/firebasejs/10.14.1/')) return route.fulfill({contentType:'text/javascript',body:url.endsWith('/firebase-app-compat.js') ? sessionFirebase : '// offline mock'});
     if (url.startsWith('https://fonts.googleapis.com/css2?')) return route.fulfill({contentType:'text/css',body:'/* offline system fonts */'});
@@ -143,6 +146,7 @@ test('LOCAL 還在但沒有 cookie 時自動登出，不讀雲端並清帳號暫
 test('不是我換人後，新分頁沒有登入與舊帳號 cookie', async t => {
   const {page,context} = await pageFor(t);
   await page.goto(base + '/115-g9/u2-01/');await login(page);
+  await page.locator('#account').evaluate(el=>el.open=true);
   await page.click('#b-swap');
   const other = await context.newPage();await other.goto(base + '/115-g9/me/');
   await other.waitForFunction(() => window.__sessionMock?.persistence.length > 0);
@@ -154,7 +158,7 @@ test('window.open 複製待送佇列：兩分頁同時重送同關只寫一次',
   await page.goto(base + '/115-g9/u2-01/');await login(page);
   await page.evaluate(() => sessionStorage.setItem('ybslab:fq',JSON.stringify([{uid:'session-one',activity:4,round:1,level:1,tries:2}])));
   const popupPromise = context.waitForEvent('page');
-  await page.evaluate(() => window.open('/115-g9/u2-02/','_blank'));
+  await page.evaluate(url => window.open(url,'_blank'),base + '/115-g9/u2-02/');
   const popup = await popupPromise;
   await Promise.all([page.reload(),popup.waitForLoadState()]);
   await Promise.all([confirmStudent(page),confirmStudent(popup)]);
@@ -176,7 +180,7 @@ for (const [path,signin,signout] of [
   ['/115-g9/teacher/report/','#report-login','#report-logout'],
   ['/115-df/teacher/','#cloud-login','#cloud-logout']
 ]) test(`教師登出清除學生瀏覽器標記：${path}`, async t => {
-  const {page,context} = await pageFor(t);
+  const {page,context} = await pageFor(t,{dfProbe:path === '/115-df/teacher/'});
   await page.goto(base + '/115-g9/u2-01/');await login(page);
   assert.equal((await context.cookies()).some(c => c.name === 'ybslab_browser'), true);
   await page.goto(base + path);await page.click(signin);
@@ -234,6 +238,7 @@ test('已記憶教師模式登出：清 cookie、廣播撤銷，不恢復舊學�
   await page.locator('#tbar').waitFor({state:'visible'});
   assert.equal(await page.evaluate(() => YBS.profile()),null,'記憶教師模式沒有建立學生 profile');
   assert.equal((await context.cookies()).some(c => c.name === 'ybslab_browser'),true);
+  await page.locator('#account').evaluate(el=>el.open=true);
   await page.click('#b-swap');
   assert.equal((await context.cookies()).some(c => c.name === 'ybslab_browser'),false);
   assert.ok(await page.evaluate(() => localStorage.getItem('ybslab:account-logout')));

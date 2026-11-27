@@ -29,10 +29,11 @@ class Element {
       if (tag) {
         const el = new Element(tag);
         for (const [, key, value] of token.matchAll(/([\w-]+)="([^"]*)"/g)) el.setAttribute(key, decode(value));
-        stack.at(-1).childNodes.push(el);
+        el.parentElement=stack.at(-1);stack.at(-1).childNodes.push(el);
         if (!['br', 'hr', 'img', 'input'].includes(tag)) stack.push(el);
       } else stack.at(-1).childNodes.push(textNode(decode(token)));
     }
+    root.childNodes.forEach(n=>n.parentElement=this);
     if (position === 'afterbegin') this.childNodes.unshift(...root.childNodes);
     else this.childNodes.push(...root.childNodes);
   }
@@ -40,6 +41,7 @@ class Element {
     this[key === 'class' ? 'className' : key] = String(value);
     if (key.startsWith('data-')) this.dataset[key.slice(5)] = String(value);
   }
+  getAttribute(key){return this[key === 'class' ? 'className' : key] ?? null}
   querySelectorAll(selector) {
     const result = [];
     const visit = parent => parent.childNodes.filter(n => n.nodeType === 1).forEach(el => {
@@ -51,6 +53,8 @@ class Element {
   querySelector(selector) { return this.querySelectorAll(selector)[0] || null; }
   get outerHTML() { return '<'+this.tagName.toLowerCase()+(this.id?' id="'+this.id+'"':'')+(this.className?' class="'+this.className+'"':'')+'>'+this.childNodes.map(n=>n.outerHTML??n.textContent).join('')+'</'+this.tagName.toLowerCase()+'>'; }
   addEventListener(type,fn) { (this.listeners??={})[type]??=[];this.listeners[type].push(fn); }
+  prepend(el){if(el.parentElement){const a=el.parentElement.childNodes;a.splice(a.indexOf(el),1)}el.parentElement=this;this.childNodes.unshift(el)}
+  append(el){if(el.parentElement){const a=el.parentElement.childNodes;a.splice(a.indexOf(el),1)}el.parentElement=this;this.childNodes.push(el)}
   focus() {}
 }
 
@@ -123,7 +127,7 @@ test('一次演出檢查雙資料、錯答與斷電不過；記次、上傳、�
 test('儲存失敗沿用 shell 提示；教師示範不儲存也不上傳',async()=>{
   const h=setup({failSave:true});await h.play();
   assert.match(h.get('sync').textContent,/這台電腦沒辦法存下進度/);
-  assert.match(h.get('rounds').textContent,/✓/);assert.equal(h.uploads.length,1);
+  assert.match(h.get('rounds').querySelector('button').getAttribute('aria-label'),/（已過關）/);assert.equal(h.uploads.length,1);
   const t=setup({teacher:true});await t.play();
   assert.equal(t.stored.size,0);assert.equal(t.uploads.length,0);assert.equal(t.get('report'),null);
 });
@@ -147,7 +151,7 @@ test('其餘使用預設選項的 27 頁，沿用兩次送出、錯答保留累�
     const h=setup({source:`let reply=true,answer=0,draw=0;const cfg=${fixture};
       cfg.rounds=cfg.rounds.map(r=>({...r,gen:()=>({n:++draw}),view:()=>({get:()=>answer}),check:()=>reply}));
       const APP=SHELL(cfg);`});
-    const key='it9:w'+cfg.week+':999-1',send=()=>h.get('b-send').onclick();
+    const key='it9:w'+cfg.week+':999-1'+(cfg.progressVersion?':'+cfg.progressVersion:''),send=()=>h.get('b-send').onclick();
     send();assert.equal(h.get('verdict').className,'verdict mid',dir);
     h.get('b-next-group').onclick();h.evaluate('reply="合成錯答"');send();assert.equal(h.get('verdict').className,'verdict no',dir);
     h.evaluate('reply=true;answer++');send();assert.equal(h.get('verdict').className,'verdict ok',dir);

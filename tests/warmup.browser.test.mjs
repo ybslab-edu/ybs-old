@@ -1,3 +1,4 @@
+import {previewBase} from './fixtures/preview-site.mjs';
 // 真實活動頁、合成班座、隔離登入 SDK；只允許本機 UTF-8 靜態資源。
 import {test, before, after} from 'node:test';
 import assert from 'node:assert/strict';
@@ -19,8 +20,7 @@ before(async () => {
       res.end(await readFile(path));
     } catch {res.writeHead(404).end();}
   });
-  await new Promise((ok, no) => {server.once('error', no); server.listen(0, '127.0.0.1', ok);});
-  base = 'http://127.0.0.1:' + server.address().port;
+  base = await previewBase(server);
   browser = await chromium.launch({headless: true});
 });
 after(async () => {await browser?.close(); if (server?.listening) await new Promise(ok => server.close(ok));});
@@ -67,6 +67,7 @@ test('真實班座進場、暖身全對與錯答回顧、可跳過、換人重�
   assert.deepEqual(writes, []);
   await page.getByRole('button', {name: '進入活動', exact: true}).click();
   assert.equal(await page.locator('#warmup').isVisible(), false);
+  await page.locator('#account').evaluate(el=>el.open=true);
   await page.click('#b-swap');
   await page.fill('#in-cls', '999'); await page.fill('#in-seat', '2');
   await page.click('#g-next'); await page.click('#g-go');
@@ -81,7 +82,7 @@ test('真實班座進場、暖身全對與錯答回顧、可跳過、換人重�
 test('第一個題庫活動無先前短題時，不顯示空暖身；原關卡可操作', async t => {
   const {page} = await setup(t, 'u2-01');
   // 等待動態模組完成，再確認沒有可用題目時未插入面板。
-  await page.evaluate(async () => {await import('/assets/warmup.js?v=20261105w1');});
+  await page.evaluate(async () => {await import('/ybs-old/assets/warmup.js?v=20261105w1');});
   assert.equal(await page.locator('#warmup').count(), 0);
   assert.equal(await page.locator('#rounds button').count(), 4);
   await page.locator('#rounds button').nth(1).click();

@@ -15,7 +15,7 @@
   --warn:#B0432C; --warn-soft:#F8E3DD; --lock:#8793A0;
   --f-body:"Noto Sans TC","Microsoft JhengHei","PingFang TC",system-ui,sans-serif;
   --f-mono:"IBM Plex Mono",Consolas,"Microsoft JhengHei",monospace;
-  --fs:16px;
+  --fs:var(--text-body,18px);
   color-scheme:light;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
@@ -43,13 +43,13 @@ button,input,textarea,select{font:inherit;color:inherit}
 /* top bar */
 .bar{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;align-items:center;gap:.5em 1em;padding:.6em 20px;background:var(--ink);color:var(--paper)}
 .bar .case{font-weight:900;letter-spacing:.04em}
-.bar .who{font-family:var(--f-mono);font-size:.9em;opacity:.85}
+.bar .who{font-family:var(--f-mono);font-size:max(var(--text-min,17px),.9em);opacity:.85}
 .bar .grow{flex:1}
-.bar .saved{font-size:.8em;opacity:.75}
-.bar button{background:transparent;border:1px solid color-mix(in srgb,var(--paper) 40%,transparent);color:var(--paper);border-radius:6px;padding:.2em .7em;cursor:pointer;font-size:.85em}
+.bar .saved{font-size:max(var(--text-min,17px),.8em);opacity:.75}
+.bar button{background:transparent;border:1px solid color-mix(in srgb,var(--paper) 40%,transparent);color:var(--paper);border-radius:6px;padding:.2em .7em;cursor:pointer;font-size:max(var(--text-min,17px),.85em)}
 .bar button:hover{background:color-mix(in srgb,var(--paper) 12%,transparent)}
 .bar button:disabled{opacity:.55;cursor:wait}
-.report-panel{max-width:1280px;margin:.7em auto 0;padding:0 20px;font-size:.9em}
+.report-panel{max-width:1280px;margin:.7em auto 0;padding:0 20px;font-size:max(var(--text-min,17px),.9em)}
 .report-panel p + p{margin-top:.35em}
 .report-panel button{margin-left:.6em}
 
@@ -59,20 +59,20 @@ button,input,textarea,select{font:inherit;color:inherit}
 /* step rail */
 .rail{position:sticky;top:4.2em;align-self:start;display:flex;flex-direction:column;gap:2px}
 @media (max-width:900px){.rail{position:static;flex-direction:row;flex-wrap:wrap}}
-.rail .sess{font-size:.75em;letter-spacing:.12em;color:var(--muted);margin:.8em 0 .2em .2em;font-weight:700}
+.rail .sess{font-size:max(var(--text-min,17px),.75em);letter-spacing:.12em;color:var(--muted);margin:.8em 0 .2em .2em;font-weight:700}
 .step{display:flex;align-items:center;gap:.6em;width:100%;text-align:left;border:0;background:transparent;padding:.45em .6em;border-radius:6px;cursor:pointer;color:var(--ink)}
 @media (max-width:900px){.step{width:auto}}
-.step .n{flex:none;width:1.7em;height:1.7em;border-radius:50%;display:grid;place-items:center;font-family:var(--f-mono);font-size:.8em;border:2px solid var(--line);background:var(--sheet)}
+.step .n{flex:none;width:1.7em;height:1.7em;border-radius:50%;display:grid;place-items:center;font-family:var(--f-mono);font-size:max(var(--text-min,17px),.8em);border:2px solid var(--line);background:var(--sheet)}
 .step.done .n{background:var(--ok);border-color:var(--ok);color:var(--sheet)}
 .step.cur{background:var(--sheet);box-shadow:inset 3px 0 0 var(--accent)}
 .step.cur .n{border-color:var(--accent);color:var(--accent)}
 .step.locked{color:var(--lock);cursor:not-allowed}
-.step .lk{margin-left:auto;font-size:.8em}
+.step .lk{margin-left:auto;font-size:max(var(--text-min,17px),.8em)}
 
 /* sheet */
 .sheet{background:var(--sheet);border:1px solid var(--line);border-radius:10px;padding:28px clamp(16px,3vw,40px);min-width:0}
 .sheet > * + *{margin-top:1.4em}
-.eyebrow{font-size:.78em;letter-spacing:.14em;color:var(--accent);font-weight:700}
+.eyebrow{font-size:max(var(--text-min,17px),.78em);letter-spacing:.14em;color:var(--accent);font-weight:700}
 .lead{color:var(--muted);max-width:42em}
 .prose{max-width:44em}
 .prose p + p{margin-top:.7em}
@@ -85,15 +85,15 @@ ol.rules li + li{margin-top:.3em}
 
 /* tables */
 .tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
-table{border-collapse:collapse;width:100%;font-size:.92em}
+table{border-collapse:collapse;width:100%;font-size:max(var(--text-min,17px),.92em)}
 th,td{text-align:left;padding:.45em .7em;border-bottom:1px solid var(--line);vertical-align:top}
 th{background:var(--sheet-2);font-weight:700;white-space:nowrap}
 tr:last-child td{border-bottom:0}
 td.t{font-family:var(--f-mono);white-space:nowrap}
 
 /* evidence marker tag */
-.tag{display:inline-flex;align-items:center;justify-content:center;min-width:3.1em;padding:.1em .5em .15em;background:var(--tag);color:var(--tag-ink);font-family:var(--f-mono);font-weight:600;font-size:.9em;clip-path:polygon(12% 0,88% 0,100% 100%,0 100%);letter-spacing:.03em}
-.tag.sm{font-size:.75em;min-width:2.7em}
+.tag{display:inline-flex;align-items:center;justify-content:center;min-width:3.1em;padding:.1em .5em .15em;background:var(--tag);color:var(--tag-ink);font-family:var(--f-mono);font-weight:600;font-size:max(var(--text-min,17px),.9em);clip-path:polygon(12% 0,88% 0,100% 100%,0 100%);letter-spacing:.03em}
+.tag.sm{font-size:max(var(--text-min,17px),.75em);min-width:2.7em}
 
 /* evidence cards */
 .exhibits{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,20em),1fr));gap:16px}
@@ -101,17 +101,17 @@ td.t{font-family:var(--f-mono);white-space:nowrap}
 .ex.open{grid-column:1/-1}
 .ex-head{display:flex;align-items:center;gap:.7em;padding:.8em 1em;border-bottom:1px solid var(--line)}
 .ex-head h3{font-size:1em}
-.ex-head .kind{margin-left:auto;font-size:.78em;color:var(--muted)}
+.ex-head .kind{margin-left:auto;font-size:max(var(--text-min,17px),.78em);color:var(--muted)}
 .ex-thumb{aspect-ratio:4/3;max-width:100%;background:var(--sheet-2);display:grid;place-items:center;overflow:hidden}
 .ex-thumb img{width:100%;height:100%;object-fit:cover;filter:blur(10px) grayscale(.6);opacity:.55}
 .ex-thumb .seal{position:absolute;font-weight:700;color:var(--ink)}
 .ex-closed{position:relative;display:grid;place-items:center}
-.ex-closed .seal{position:absolute;background:var(--sheet);border:2px dashed var(--muted);padding:.3em .9em;border-radius:6px;font-size:.9em}
+.ex-closed .seal{position:absolute;background:var(--sheet);border:2px dashed var(--muted);padding:.3em .9em;border-radius:6px;font-size:max(var(--text-min,17px),.9em)}
 .ex-actions{display:flex;flex-wrap:wrap;gap:.5em;padding:.8em 1em}
 .ex-body{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:20px;padding:1em}
 @media (max-width:1000px){.ex-body{grid-template-columns:minmax(0,1fr)}}
 .photo{width:100%;border-radius:6px;border:1px solid var(--line);cursor:zoom-in;display:block}
-.seen{font-size:.78em;color:var(--ok);font-weight:700}
+.seen{font-size:max(var(--text-min,17px),.78em);color:var(--ok);font-weight:700}
 
 /* buttons */
 .btn{display:inline-flex;align-items:center;gap:.4em;border:1px solid var(--line);background:var(--sheet);border-radius:7px;padding:.45em 1em;cursor:pointer;font-weight:500}
@@ -124,7 +124,7 @@ td.t{font-family:var(--f-mono);white-space:nowrap}
 
 /* forms */
 .fld{display:flex;flex-direction:column;gap:.25em;min-width:0}
-.fld > span{font-size:.85em;font-weight:700;color:var(--muted)}
+.fld > span{font-size:max(var(--text-min,17px),.85em);font-weight:700;color:var(--muted)}
 .fld input,.fld textarea,.fld select,.blank{border:1px solid var(--line);border-radius:6px;background:var(--sheet-2);padding:.4em .6em;width:100%}
 .fld textarea{min-height:3.4em;resize:vertical}
 .fld input:focus,.fld textarea:focus,.blank:focus{background:var(--sheet);border-color:var(--accent);outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
@@ -132,7 +132,7 @@ td.t{font-family:var(--f-mono);white-space:nowrap}
 .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 @media (max-width:640px){.grid2,.grid3{grid-template-columns:minmax(0,1fr)}}
 .conf{display:flex;gap:.3em}
-.conf label{position:relative;display:grid;place-items:center;width:2em;height:2em;border:1px solid var(--line);border-radius:50%;cursor:pointer;font-family:var(--f-mono);font-size:.85em}
+.conf label{position:relative;display:grid;place-items:center;width:2em;height:2em;border:1px solid var(--line);border-radius:50%;cursor:pointer;font-family:var(--f-mono);font-size:max(var(--text-min,17px),.85em)}
 .conf input{position:absolute;opacity:0;pointer-events:none}
 .conf input:checked + span{color:var(--sheet)}
 .conf label:has(input:checked){background:var(--accent);border-color:var(--accent);color:var(--sheet)}
@@ -143,11 +143,11 @@ td.t{font-family:var(--f-mono);white-space:nowrap}
 .seg label:has(input:checked){background:var(--accent);color:var(--sheet);font-weight:700}
 .seg label:has(input:focus-visible){outline:3px solid var(--accent)}
 fieldset{border:0;margin:0;padding:0;min-width:0}
-legend{padding:0;font-size:.85em;font-weight:700;color:var(--muted)}
+legend{padding:0;font-size:max(var(--text-min,17px),.85em);font-weight:700;color:var(--muted)}
 
 /* chips (evidence pickers) */
 .chips{display:flex;flex-wrap:wrap;gap:.35em}
-.chip{position:relative;display:inline-flex;align-items:center;gap:.3em;border:1px solid var(--line);border-radius:999px;padding:.12em .7em;cursor:pointer;font-family:var(--f-mono);font-size:.85em;background:var(--sheet)}
+.chip{position:relative;display:inline-flex;align-items:center;gap:.3em;border:1px solid var(--line);border-radius:999px;padding:.12em .7em;cursor:pointer;font-family:var(--f-mono);font-size:max(var(--text-min,17px),.85em);background:var(--sheet)}
 .chip input{position:absolute;opacity:0;pointer-events:none}
 .chip:has(input:checked){background:var(--tag);border-color:var(--tag);color:var(--tag-ink);font-weight:600}
 .chip:has(input:focus-visible){outline:3px solid var(--accent)}
@@ -162,7 +162,7 @@ legend{padding:0;font-size:.85em;font-weight:700;color:var(--muted)}
 /* timeline */
 .tl{display:grid;grid-template-columns:7.5em minmax(0,1fr) minmax(0,15em);gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
 .tl > div{padding:.5em .7em;border-bottom:1px solid var(--line)}
-.tl .h{background:var(--sheet-2);font-weight:700;font-size:.85em}
+.tl .h{background:var(--sheet-2);font-weight:700;font-size:max(var(--text-min,17px),.85em)}
 .tl .time{font-family:var(--f-mono);font-weight:600;border-right:3px solid var(--tag)}
 .tl input{width:100%;border:0;background:transparent;padding:.2em 0}
 .tl input:focus{outline:none;box-shadow:0 2px 0 var(--accent)}
@@ -178,14 +178,14 @@ legend{padding:0;font-size:.85em;font-weight:700;color:var(--muted)}
 .ladder{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 @media (max-width:760px){.ladder{grid-template-columns:minmax(0,1fr)}}
 .rung{border:1px solid var(--line);border-radius:8px;padding:.8em;background:var(--sheet-2);display:flex;flex-direction:column;gap:.5em}
-.rung .lv{font-size:.78em;letter-spacing:.1em;font-weight:700;color:var(--muted)}
+.rung .lv{font-size:max(var(--text-min,17px),.78em);letter-spacing:.1em;font-weight:700;color:var(--muted)}
 
 /* discussion card */
 .dcard{border:3px solid var(--ink);border-radius:14px;padding:clamp(16px,3vw,32px);background:var(--sheet);font-size:1.15em}
 .dcard .seatbig{font-family:var(--f-mono);font-size:2.2em;font-weight:600;line-height:1}
 .dcard .claim{font-size:1.15em;font-weight:700}
 .comment{border:1px solid var(--line);border-radius:8px;padding:.6em .8em;background:var(--sheet-2)}
-.stance{font-weight:700;font-size:.85em;padding:.05em .55em;border-radius:5px;background:var(--accent-soft);color:var(--accent)}
+.stance{font-weight:700;font-size:max(var(--text-min,17px),.85em);padding:.05em .55em;border-radius:5px;background:var(--accent-soft);color:var(--accent)}
 
 /* modal */
 .modal{position:fixed;inset:0;background:color-mix(in srgb,#000 82%,transparent);z-index:50;display:flex;flex-direction:column}
@@ -200,7 +200,7 @@ legend{padding:0;font-size:.85em;font-weight:700;color:var(--muted)}
 .login{max-width:34em;margin:6vh auto 0;padding-inline:20px}
 .login .sheet > * + *{margin-top:1.1em}
 .title-xl{font-size:clamp(1.8em,4vw,2.6em);font-weight:900;letter-spacing:.02em}
-.net{font-size:.78em;padding:.1em .7em;border-radius:999px;border:1px solid color-mix(in srgb,var(--paper) 35%,transparent);white-space:nowrap}
+.net{font-size:max(var(--text-min,17px),.78em);padding:.1em .7em;border-radius:999px;border:1px solid color-mix(in srgb,var(--paper) 35%,transparent);white-space:nowrap}
 .net::before{content:"●";margin-right:.4em}
 .net.ok::before{color:#6FD39B} .net.off{opacity:.7} .net.warn::before{color:#F2C230} .net.bad::before{color:#F08A72}
 .netbanner{background:var(--warn-soft);color:var(--warn);border-bottom:2px solid var(--warn);padding:.6em 20px;font-weight:700}
@@ -215,41 +215,41 @@ legend{padding:0;font-size:.85em;font-weight:700;color:var(--muted)}
 @media (max-width:1000px){.vcol{display:inline-block}}
 .vclosed article{display:none}
 #work h3{margin-top:1.6em}#work h3:first-child{margin-top:0}
-.vtabs.g{display:grid;gap:6px} .vg{display:flex;flex-wrap:wrap;gap:6px;align-items:center} .vgl{font-size:.78em;color:var(--muted);min-width:5.2em} .vgl.new{color:var(--accent);font-weight:700} .vtab.new{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.vtabs.g{display:grid;gap:6px} .vg{display:flex;flex-wrap:wrap;gap:6px;align-items:center} .vgl{font-size:max(var(--text-min,17px),.78em);color:var(--muted);min-width:5.2em} .vgl.new{color:var(--accent);font-weight:700} .vtab.new{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
 .vtab.on{background:var(--accent);border-color:var(--accent);color:var(--sheet)}
 .susp{border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;gap:10px;background:var(--sheet)}
-.lbl2{font-size:.85em;font-weight:700;color:var(--muted);margin-bottom:.2em}
+.lbl2{font-size:max(var(--text-min,17px),.85em);font-weight:700;color:var(--muted);margin-bottom:.2em}
 
 /* v1.9 additions */
 .term{border:0;border-bottom:1px dotted var(--accent);background:none;font:inherit;color:inherit;padding:0;cursor:help}
 .term:hover{background:var(--accent-soft)}
 #termcard{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:80;background:var(--sheet);color:var(--ink);border:2px solid var(--accent);border-radius:12px;padding:12px 16px;width:min(32em,92vw);box-shadow:0 10px 30px color-mix(in srgb,#000 25%,transparent);display:grid;gap:6px}
 #termcard[hidden],#glmodal[hidden]{display:none}
-#termcard .cat{font-size:.8em;color:var(--muted)} #termcard p{margin:0}
+#termcard .cat{font-size:max(var(--text-min,17px),.8em);color:var(--muted)} #termcard p{margin:0}
 #glmodal{position:fixed;inset:0;z-index:90;background:color-mix(in srgb,#000 45%,transparent);display:grid;place-items:center;padding:12px}
 .glbox{background:var(--sheet);color:var(--ink);border-radius:12px;padding:16px 20px;width:min(44em,100%);max-height:88vh;overflow:auto;display:grid;gap:10px;align-content:start}
 .glbox input{font:inherit;padding:.4em .6em;border:1px solid var(--line);border-radius:7px;background:var(--sheet-2);color:inherit}
 .glbox h4{margin:.8em 0 .2em} .glbox dl{margin:0;display:grid;grid-template-columns:11em minmax(0,1fr);gap:.3em 1em} .glbox dt{font-family:var(--f-mono);font-weight:600;word-break:break-all} .glbox dd{margin:0}
 @media (max-width:640px){.glbox dl{grid-template-columns:minmax(0,1fr)}}
-.rq{font-style:normal;font-size:.72em;padding:.05em .55em;border-radius:999px;background:var(--accent);color:var(--sheet);margin-left:.45em;font-weight:700;white-space:nowrap;vertical-align:.1em} .rq.o{background:transparent;border:1px solid var(--muted);color:var(--muted)}
-.stepline{margin:.2em 0 .8em;font-size:.88em;color:var(--muted)} .stepline b{color:var(--text,inherit);margin-right:.3em} .stepline span+span{margin-left:1.2em}
-.stepinfo{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:.4em 0 1em;font-size:.88em}
+.rq{font-style:normal;font-size:max(var(--text-min,17px),.72em);padding:.05em .55em;border-radius:999px;background:var(--accent);color:var(--sheet);margin-left:.45em;font-weight:700;white-space:nowrap;vertical-align:.1em} .rq.o{background:transparent;border:1px solid var(--muted);color:var(--muted)}
+.stepline{margin:.2em 0 .8em;font-size:max(var(--text-min,17px),.88em);color:var(--muted)} .stepline b{color:var(--text,inherit);margin-right:.3em} .stepline span+span{margin-left:1.2em}
+.stepinfo{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:.4em 0 1em;font-size:max(var(--text-min,17px),.88em)}
 .stepinfo>div{background:var(--sheet-2);border:1px solid var(--line);border-radius:8px;padding:.5em .8em}
-.stepinfo b{display:block;color:var(--muted);font-size:.85em}
+.stepinfo b{display:block;color:var(--muted);font-size:max(var(--text-min,17px),.85em)}
 @media (max-width:760px){.stepinfo{grid-template-columns:minmax(0,1fr)}}
 .excase{border:1px dashed var(--accent);border-radius:8px;padding:.5em .9em;margin:.6em 0;background:var(--accent-soft)}
 .excase summary{cursor:pointer;font-weight:700;color:var(--accent)} .excase p{margin:.5em 0}
-.excase .fake{font-size:.82em;color:var(--muted);margin:.2em 0 .4em}
+.excase .fake{font-size:max(var(--text-min,17px),.82em);color:var(--muted);margin:.2em 0 .4em}
 .excase dl{margin:.4em 0;display:grid;grid-template-columns:max-content 1fr;gap:.25em .8em} .excase dt{color:var(--muted)} .excase dd{margin:0}
-.chips.grp{display:grid;gap:6px}.cg{display:flex;flex-wrap:wrap;align-items:center;gap:.35em}.gl{font-size:.8em;color:var(--muted);min-width:5.5em}
+.chips.grp{display:grid;gap:6px}.cg{display:flex;flex-wrap:wrap;align-items:center;gap:.35em}.gl{font-size:max(var(--text-min,17px),.8em);color:var(--muted);min-width:5.5em}
 .minis{display:flex;flex-wrap:wrap;gap:10px;margin-top:.5em}
-.mini{margin:0;width:9.5em;font-size:.82em}.mini img{width:100%;border-radius:6px;display:block}.mini figcaption{margin-top:.2em}
+.mini{margin:0;width:9.5em;font-size:max(var(--text-min,17px),.82em)}.mini img{width:100%;border-radius:6px;display:block}.mini figcaption{margin-top:.2em}
 #glmodal,.glbox{font-family:var(--f-body)}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:.6em 1.2em;border-radius:8px;z-index:60;max-width:calc(100% - 32px)}
 @media (prefers-reduced-motion:no-preference){.ex,.btn,.step{transition:background .15s,border-color .15s,box-shadow .15s}}
-#anspanel{position:fixed;left:10px;bottom:10px;width:232px;z-index:60;background:#fff8e1;color:#3a2f00;border:2px solid #c9a227;border-radius:10px;padding:.6em .7em;font-size:.82rem;line-height:1.45;box-shadow:0 4px 14px rgba(0,0,0,.25)}
-#anspanel .an{margin:.35em 0}#anspanel .ap{font-family:var(--f-mono);font-size:.74rem;opacity:.85;margin-bottom:.4em;word-break:break-all}
-#anspanel button{font:inherit;font-size:.78rem;padding:.2em .6em;border:1px solid #c9a227;background:#fff;border-radius:6px;cursor:pointer}
+#anspanel{position:fixed;left:10px;bottom:10px;width:232px;z-index:60;background:#fff8e1;color:#3a2f00;border:2px solid #c9a227;border-radius:10px;padding:.6em .7em;font-size:max(var(--text-min,17px),.82rem);line-height:1.45;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+#anspanel .an{margin:.35em 0}#anspanel .ap{font-family:var(--f-mono);font-size:max(var(--text-min,17px),.74rem);opacity:.85;margin-bottom:.4em;word-break:break-all}
+#anspanel button{font:inherit;font-size:max(var(--text-min,17px),.78rem);padding:.2em .6em;border:1px solid #c9a227;background:#fff;border-radius:6px;cursor:pointer}
 @media print{#anspanel{display:none}}
 </style>
 </head>
@@ -473,9 +473,9 @@ function renderLogin(){
     <div class="eyebrow">數理資優班專題研究 · 個人調查</div>
     <h1 class="title-xl">消失的原始資料</h1>
     <p class="lead">你是研究鑑識員。前兩堂每個人獨立調查（第一堂做到提出 H1，第二堂找反證、寫結論），第三堂再把你的結論帶到證據畫廊和同學討論。</p>
-    ${acctLogin?`<div id="yl"><p class="lead" style="font-size:.95em">先登入：帳號是 cgjh＋學號，密碼是 cgjh＋身分證字號。</p><div id="yl-btn"></div><p id="yl-err" role="alert" style="color:var(--bad,#f87171);min-height:1.2em;margin:.4em 0 0"></p><p style="margin:.2em 0 0"><button type="button" id="yl-manual" class="btn" style="background:none;border:0;padding:0;color:#8ab4f8;text-decoration:underline;cursor:pointer">登入不了？改填班級座號</button></p></div>
+    ${acctLogin?`<div id="yl"><p class="lead" style="font-size:max(var(--text-min,17px),.95em)">先登入：帳號是 cgjh＋學號，密碼是 cgjh＋身分證字號。</p><div id="yl-btn"></div><p id="yl-err" role="alert" style="color:var(--bad,#f87171);min-height:1.2em;margin:.4em 0 0"></p><p style="margin:.2em 0 0"><button type="button" id="yl-manual" class="btn" style="background:none;border:0;padding:0;color:#8ab4f8;text-decoration:underline;cursor:pointer">登入不了？改填班級座號</button></p></div>
     <div id="yw" hidden><p class="lead" id="yw-text"></p><div class="row" id="yw-btns" hidden><button type="button" class="btn" id="yw-no">不是我</button><button type="button" class="btn pri" id="yw-yes">對，開始調查</button></div></div>`:''}
-    <p id="yl-me" class="lead" hidden style="font-size:.95em"></p>
+    <p id="yl-me" class="lead" hidden style="font-size:max(var(--text-min,17px),.95em)"></p>
     <form id="lf" class="grid2" autocomplete="off" ${acctLogin?'hidden':''}>
       <label class="fld"><span>班級（例如 701）</span><input id="lf-cls" inputmode="numeric" required maxlength="6" value="${esc(ANS?'777':(last?.cls||''))}"></label>
       <label class="fld"><span>座號</span><input id="lf-seat" inputmode="numeric" required maxlength="3" value="${ANS?'77':''}"></label>
@@ -485,9 +485,9 @@ function renderLogin(){
       <p><b>換了一台電腦？</b>如果你上一堂課已經下載過「報告檔」，請在這裡匯入，接著做下去。</p>
       <div class="row" style="margin-top:.6em"><label class="btn"><input id="imp" type="file" accept=".html,.htm" hidden>匯入我的報告檔</label></div>
     </div>
-    ${NET.on?'<details class="tlogin" style="margin-top:.8em"><summary style="cursor:pointer;color:var(--muted)">我是老師</summary><form id="tf" class="row" style="margin-top:.6em"><input id="tpin" inputmode="numeric" autocomplete="off" placeholder="老師 PIN" aria-label="老師 PIN" style="font:inherit;padding:.4em .6em;border:1px solid var(--line);border-radius:7px"><button class="btn" type="submit">進入監控後台</button><span id="tmsg" class="lead" style="font-size:.85em"></span></form></details>':''}
+    ${NET.on?'<details class="tlogin" style="margin-top:.8em"><summary style="cursor:pointer;color:var(--muted)">我是老師</summary><form id="tf" class="row" style="margin-top:.6em"><input id="tpin" inputmode="numeric" autocomplete="off" placeholder="老師 PIN" aria-label="老師 PIN" style="font:inherit;padding:.4em .6em;border:1px solid var(--line);border-radius:7px"><button class="btn" type="submit">進入監控後台</button><span id="tmsg" class="lead" style="font-size:max(var(--text-min,17px),.85em)"></span></form></details>':''}
     ${ANS?'<div class="callout good"><p><b>教師解答版</b>：班級 <b>777</b>、座號 <b>77</b> 登入，會載入已填好的全部答案，一路按「下一步」就能走完兩堂。用其他班級座號登入則和學生版一樣是空白作答。</p></div>':''}
-    <p class="lead" style="font-size:.85em">不用輸入姓名。作答會儲存在這台電腦；登入交件後，老師可收到報告，也請保留下載檔備份。</p>
+    <p class="lead" style="font-size:max(var(--text-min,17px),.85em)">不用輸入姓名。作答會儲存在這台電腦；登入交件後，老師可收到報告，也請保留下載檔備份。</p>
   </div></div>`;
   $('#tf')?.addEventListener('submit', async ev=>{ ev.preventDefault();
     const r=await fetch('/api/t/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:$('#tpin').value.trim()})});
@@ -941,7 +941,7 @@ function pExif(){
          <li>切換到「<b>詳細資料</b>」分頁。</li>
          <li>找到「拍攝日期」「相機製造商」「相機型號」，填到下面。後兩欄就是拍這張照片的手機品牌和型號。</li>
        </ol>
-       <div class="callout" style="margin-top:1em;font-size:.9em">要先下載成檔案，才看得到這些資料。</div>
+       <div class="callout" style="margin-top:1em;font-size:max(var(--text-min,17px),.9em)">要先下載成檔案，才看得到這些資料。</div>
        ${EX_EXIF}
        <div style="display:grid;gap:10px;margin-top:1em">
          <label class="fld"><span>拍攝日期</span><input id="x-time" data-k="l01.time" placeholder="例如 2026/1/1 上午 08:00"></label>
@@ -971,8 +971,8 @@ function pExif(){
 /* ---------- evidence card ---------- */
 function contentOf(e){
   let content='';
-  if(e.type==='photo') content=`${e.note?`<p class="lead" style="font-size:.9em;margin:0 0 .6em"><b>先讀這句：</b>${esc(e.note)}</p>`:''}<img class="photo" alt="${esc(e.title)}" src="${e.src}" data-zoom="${e.id}"><div class="row" style="margin-top:.6em"><button class="btn tagbtn" type="button" data-dl="${e.id}">下載原始照片（查 EXIF 用）</button></div>`;
-  else if(e.type==='table'){ const rows=parseCSV(e.csv); content=`<div class="tbl-wrap"><table><thead><tr>${rows[0].map(h=>`<th>${termify(esc(h))}</th>`).join('')}</tr></thead><tbody>${rows.slice(1).map(r=>`<tr>${r.map((c,i)=>`<td class="${i===0?'t':''}">${termify(esc(c))}</td>`).join('')}</tr>`).join('')}</tbody></table></div>${e.note?`<p class="lead" style="font-size:.85em;margin-top:.5em">${esc(e.note)}</p>`:''}`; }
+  if(e.type==='photo') content=`${e.note?`<p class="lead" style="font-size:max(var(--text-min,17px),.9em);margin:0 0 .6em"><b>先讀這句：</b>${esc(e.note)}</p>`:''}<img class="photo" alt="${esc(e.title)}" src="${e.src}" data-zoom="${e.id}"><div class="row" style="margin-top:.6em"><button class="btn tagbtn" type="button" data-dl="${e.id}">下載原始照片（查 EXIF 用）</button></div>`;
+  else if(e.type==='table'){ const rows=parseCSV(e.csv); content=`<div class="tbl-wrap"><table><thead><tr>${rows[0].map(h=>`<th>${termify(esc(h))}</th>`).join('')}</tr></thead><tbody>${rows.slice(1).map(r=>`<tr>${r.map((c,i)=>`<td class="${i===0?'t':''}">${termify(esc(c))}</td>`).join('')}</tr>`).join('')}</tbody></table></div>${e.note?`<p class="lead" style="font-size:max(var(--text-min,17px),.85em);margin-top:.5em">${esc(e.note)}</p>`:''}`; }
   else content=`<div class="prose">${e.text.split(/\n\s*\n/).map(p=>`<p>${termify(esc(p))}</p>`).join('')}</div>`;
   return content;
 }
@@ -998,7 +998,7 @@ function wireExhibits(root, list, openSet, rerender){
 const open1 = new Set();
 function exifFields(base){
   return `<div class="grid3"><label class="fld"><span>拍攝日期</span><input class="mono" data-k="${base}.time"></label><label class="fld"><span>相機製造商</span><input data-k="${base}.make"></label><label class="fld"><span>相機型號</span><input data-k="${base}.model"></label></div>
-  <details><summary style="cursor:pointer;font-size:.85em;color:var(--muted)">選填：尺寸、方向（鑑識高手加分，在「詳細資料」的「影像」區塊）</summary><div class="grid2" style="margin-top:.5em"><label class="fld"><span>尺寸</span><input data-k="${base}.dim"></label><label class="fld"><span>方向</span><input data-k="${base}.ori"></label></div></details>`;
+  <details><summary style="cursor:pointer;font-size:max(var(--text-min,17px),.85em);color:var(--muted)">選填：尺寸、方向（鑑識高手加分，在「詳細資料」的「影像」區塊）</summary><div class="grid2" style="margin-top:.5em"><label class="fld"><span>尺寸</span><input data-k="${base}.dim"></label><label class="fld"><span>方向</span><input data-k="${base}.ori"></label></div></details>`;
 }
 function obsForm(e){
   const b=`ev.${e.id}`;
@@ -1024,7 +1024,7 @@ function pRound1(focusId){
    ${EX_OBS}
    <div class="exhibits">${list.map(e=>exhibitCard(e,{isOpen:id=>open1.has(id),form:obsForm})).join('')}</div>
    <div class="callout lockbox" id="r1st" style="margin-top:1em">${r1StatusHTML(miss)}</div>
-   <div class="row"><button class="btn pri" type="button" id="r2go">進入第二輪：整理疑點</button><span class="lead" style="font-size:.85em">已打開 ${list.filter(e=>opened(e.id)).length} / ${list.length} 件</span></div>`;
+   <div class="row"><button class="btn pri" type="button" id="r2go">進入第二輪：整理疑點</button><span class="lead" style="font-size:max(var(--text-min,17px),.85em)">已打開 ${list.filter(e=>opened(e.id)).length} / ${list.length} 件</span></div>`;
   bind($('#main'));
   $('#main').oninput=()=>{ const st=$('#r1st'); if(st) st.innerHTML=r1StatusHTML(r1Missing()); };
   wireExhibits($('#main'), list, open1, id=>{ pBatch1(id); });
@@ -1148,7 +1148,7 @@ function pBatch2(focusId){
      <p class="prose">先想：<b>H1 如果是對的，新證據會長什麼樣子？錯的呢？</b></p>
      <label class="fld"><span>如果我的 H1 是對的，第二批裡應該會看到</span><textarea data-k="pred.t"></textarea></label>
      <label class="fld"><span>如果我的 H1 是錯的，第二批裡可能會看到</span><textarea data-k="pred.f"></textarea></label>
-     <p class="prose" style="font-size:.9em">還在等？可以<button class="term" type="button" id="back3" style="font-size:inherit">回第 3 步補強</button>。</p>
+     <p class="prose" style="font-size:max(var(--text-min,17px),.9em)">還在等？可以<button class="term" type="button" id="back3" style="font-size:inherit">回第 3 步補強</button>。</p>
      <h3>老師公布後</h3>
      <p class="prose">老師公布密碼後輸入，就能打開。</p>
      <form id="pwf" class="row"><label class="fld" style="flex:1;min-width:12em"><span>第二批密碼</span><input id="pw2" class="mono" autocomplete="off" style="text-transform:uppercase;letter-spacing:.12em"></label><button class="btn pri" type="submit" style="align-self:flex-end">解鎖</button></form>
@@ -1166,7 +1166,7 @@ function pBatch2(focusId){
    <div class="frozen"><b>你的 H1</b>　${esc(S.h1.cause)} 可能造成 ${esc(S.h1.effect)}（證據 ${S.h1.ev.map(lbl).join('、')}）
      ${(pr.t||pr.f)?`<p style="margin:.4em 0 0"><b>我的預測</b>　對的話：${esc(pr.t||'（沒寫）')}　／　錯的話：${esc(pr.f||'（沒寫）')}</p>`:''}</div>
    <p class="lead">${esc(B2.rule)}</p>
-   <div class="callout" style="margin:.6em 0"><b>第二批共 ${list.length} 份新證據</b>　${list.map(e=>`<span class="tag sm">${lbl(e.id)}</span> ${esc(e.title)}`).join('　')}<br><span style="font-size:.9em">左邊分頁標「第二批（新）」的就是這幾份；下面逐一判斷。</span></div>
+   <div class="callout" style="margin:.6em 0"><b>第二批共 ${list.length} 份新證據</b>　${list.map(e=>`<span class="tag sm">${lbl(e.id)}</span> ${esc(e.title)}`).join('　')}<br><span style="font-size:max(var(--text-min,17px),.9em)">左邊分頁標「第二批（新）」的就是這幾份；下面逐一判斷。</span></div>
    ${EX_B2}
    <h3>逐一判斷</h3>
    <div style="display:grid;gap:12px">${list.map(e=>{ const b=`b2.ev.${e.id}`; b2Ev(e.id); return `<div class="susp" data-j="${e.id}">
@@ -1362,7 +1362,7 @@ function reportHTML(){
   // JSON 保留原欄位與版本；跳脫所有 <，避免結束標籤及 HTML 註解改變解析狀態。
   const data=JSON.stringify({...S, b2:{...S.b2,pw:undefined}, reveal:{...S.reveal,pw:undefined}}).replace(/</g,'\\u003c');
   return `<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(S.cls)}班${esc(S.seat)}號 專題研究報告</title>
-<style>body{font-family:"Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;color:#17222D;background:#fff;max-width:900px;margin:0 auto;padding:24px 20px 60px;line-height:1.65;font-size:15px}
+<style>body{font-family:"Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;color:#17222D;background:#fff;max-width:900px;margin:0 auto;padding:24px 20px 60px;line-height:1.65;font-size:var(--text-body,18px)}
 h1{font-size:24px;margin:0}h2{font-size:18px;margin:28px 0 8px;padding-bottom:4px;border-bottom:2px solid #17222D}
 table{border-collapse:collapse;width:100%;margin:6px 0}th,td{border:1px solid #C9D2DA;padding:5px 8px;text-align:left;vertical-align:top}th{background:#F1F4F6;width:11em;font-weight:700}
 .t{font-family:Consolas,monospace;white-space:nowrap}.na{color:#9AA4AE}.meta{color:#56636F}.tag{background:#F2C230;padding:0 6px;font-family:Consolas,monospace;font-weight:700}

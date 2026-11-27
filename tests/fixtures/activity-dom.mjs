@@ -66,6 +66,7 @@ export class Element {
   }
   closest(selector){return this.matches(selector)?this:this.parentElement?.closest(selector)||null}
   appendChild(el){this.append(el);return el}
+  prepend(el){if(el.parentElement){const a=el.parentElement.childNodes;a.splice(a.indexOf(el),1)}el.parentElement=this;this.childNodes.unshift(el)}
   append(el){if(el.parentElement){const a=el.parentElement.childNodes;a.splice(a.indexOf(el),1)}el.parentElement=this;this.childNodes.push(el)}
   get previousElementSibling(){const a=this.parentElement.childNodes.filter(n=>n.nodeType===1);return a[a.indexOf(this)-1]}
   get parentNode(){return this.parentElement}

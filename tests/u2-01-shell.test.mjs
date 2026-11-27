@@ -63,6 +63,7 @@ class Element {
     return !selector||this.tagName===selector.toUpperCase();
   }
   closest(selector){return this.matches(selector)?this:this.parentElement?.closest(selector)||null}
+  prepend(el){if(el.parentElement){const a=el.parentElement.childNodes;a.splice(a.indexOf(el),1)}el.parentElement=this;this.childNodes.unshift(el)}
   append(el){if(el.parentElement){const a=el.parentElement.childNodes;a.splice(a.indexOf(el),1)}el.parentElement=this;this.childNodes.push(el)}
   get previousElementSibling(){const a=this.parentElement.childNodes.filter(n=>n.nodeType===1);return a[a.indexOf(this)-1]}
   get parentNode(){return this.parentElement}
@@ -157,7 +158,7 @@ test('實際拍照保留所有判定分支、清空答案與照片更換時機',
   assert.match(h.get('verdict').textContent,/看得很清楚！但還能更小/);assert.equal(h.evaluate('photos'),bigPhotos);
   h.fill();h.shoot();assert.match(h.get('verdict').textContent,/朋友回訊息：「看到了！」/);
   assert.match(h.get('verdict').textContent,/取樣/);assert.equal(h.progress().mask,1);assert.equal(h.progress().tries[0],4);
-  assert.equal(h.get('rounds').querySelector('button').textContent.includes('✓'),true);
+  assert.match(h.get('rounds').querySelector('button')['aria-label'],/（已過關）/);
   h.get('b-next').click();assert.equal(h.evaluate('ri'),1);assert.equal(h.get('res').disabled,true);
   h.fill();h.shoot();h.get('b-next').click();assert.equal(h.evaluate('ri'),2);
   h.fill();h.get('res-up').click();const capPhotos=h.evaluate('photos');h.shoot();

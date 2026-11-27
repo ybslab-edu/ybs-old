@@ -159,10 +159,10 @@ const YBS = (() => {
       .ybs-login .btn:disabled{opacity:1;background:var(--panel-hi);color:var(--dim);cursor:wait}
       .ybs-password{position:relative}
       .ybs-password-icon{position:absolute;right:59px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--text)}
-      .ybs-password-toggle{position:absolute;right:3px;top:50%;transform:translateY(-50%);box-sizing:border-box;width:80px;min-height:44px;padding:4px 4px 4px 26px;font:inherit;font-size:14px;border:0;border-radius:0;background:transparent;color:var(--text);box-shadow:none;cursor:pointer}
+      .ybs-password-toggle{position:absolute;right:3px;top:50%;transform:translateY(-50%);box-sizing:border-box;width:80px;min-height:44px;padding:4px 4px 4px 26px;font:inherit;font-size:var(--text-min,17px);border:0;border-radius:0;background:transparent;color:var(--text);box-shadow:none;cursor:pointer}
     </style><form id="` + id + '" class="ybs-login" autocomplete="off" style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:320px;margin:0 auto;text-align:left">'
-      + '<label style="font-size:15px">帳號<input name="a" inputmode="text" autocapitalize="off" spellcheck="false" placeholder="cgjh＋學號" style="' + box + '"></label>'
-      + '<div><label for="' + id + '-password" style="font-size:15px">密碼</label><div class="ybs-password"><input id="' + id + '-password" name="p" type="password" autocapitalize="off" spellcheck="false" placeholder="cgjh＋身分證字號" style="' + box + ';padding-right:92px">'
+      + '<label style="font-size:var(--text-min,17px)">帳號<input name="a" inputmode="text" autocapitalize="off" spellcheck="false" placeholder="cgjh＋學號" style="' + box + '"></label>'
+      + '<div><label for="' + id + '-password" style="font-size:var(--text-min,17px)">密碼</label><div class="ybs-password"><input id="' + id + '-password" name="p" type="password" autocapitalize="off" spellcheck="false" placeholder="cgjh＋身分證字號" style="' + box + ';padding-right:92px">'
       // 使用原生 input 按鈕，保留各入口以第一個 button 找登入送出的既有介面。
       + '<input type="button" class="ybs-password-toggle" value="顯示" aria-label="顯示密碼" aria-pressed="false" aria-controls="' + id + '-password"><svg class="ybs-password-icon" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></div></div>'
       + '<button type="submit" class="btn primary" style="width:100%">登入</button></form>';
@@ -648,9 +648,9 @@ const ybsLogoutPending = (() => {
         }
         body .ybs-logout-pending strong,body .ybs-logout-pending span{
           display:block;font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
-          font-size:16px;line-height:1.6;font-weight:700;color:#FF6B3D
+          font-size:var(--text-min,17px);line-height:1.6;font-weight:700;color:#FF6B3D
         }
-        body .ybs-logout-pending span{font-size:15px;font-weight:400;color:#E6E9EF;margin-top:4px}
+        body .ybs-logout-pending span{font-size:var(--text-min,17px);font-weight:400;color:#E6E9EF;margin-top:4px}
       `;
       document.head.appendChild(style);
     }

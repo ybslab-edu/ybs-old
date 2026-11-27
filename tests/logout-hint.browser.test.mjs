@@ -1,3 +1,4 @@
+import {previewBase} from './fixtures/preview-site.mjs';
 // 真實頁面與原有合成 Firebase；所有外部請求在瀏覽器內攔截。
 import {test,before,after} from 'node:test';
 import assert from 'node:assert/strict';
@@ -21,8 +22,7 @@ before(async () => {
       res.end(await readFile(path));
     } catch { res.writeHead(404).end(); }
   });
-  await new Promise(ok => server.listen(0,'127.0.0.1',ok));
-  base = 'http://127.0.0.1:' + server.address().port;
+  base = await previewBase(server);
   browser = await chromium.launch({headless:true});
 });
 after(async () => {await browser?.close();if(server?.listening) await new Promise(ok=>server.close(ok));});
@@ -81,6 +81,7 @@ async function pending(page) {
   });
   await page.waitForFunction(()=>window.__hintRelease && YBS.hasPending());
 }
+async function clickLogout(page,selector){if(selector==='#b-swap')await page.locator('#account').evaluate(el=>el.open=true);await page.click(selector)}
 async function out(page,entry) {
   await page.waitForFunction(()=>!YBS.profile());
   await page.locator(entry.signedOut).waitFor({state:'visible'});
@@ -90,7 +91,7 @@ for(const entry of entries) {
   test(`${entry.name}：待送先提示、送完清提示、再次登出且紀錄已寫入`,async t=>{
     const page=await pageFor(t,entry);await pending(page);
     const uid=await page.evaluate(()=>YBS.profile().uid);
-    await page.click(entry.button);
+    await clickLogout(page,entry.button);
     assert.equal(await page.evaluate(()=>YBS.profile().uid),uid);
     assert.match(await page.locator(entry.notice).innerText(),/紀錄上傳中，請稍候再登出\s+再按一次/);
     assert.equal(await page.evaluate(()=>firebase.apps[0].auth().currentUser.uid),uid);
@@ -106,7 +107,7 @@ for(const entry of entries) {
           fits:box.left >= 0 && box.right <= innerWidth && el.scrollWidth <= el.clientWidth,
           pageFits:document.documentElement.scrollWidth <= innerWidth};
       });
-      assert.deepEqual(visual,{color:'rgb(255, 107, 61)',background:'rgb(28, 33, 44)',size:'16px',weight:'700',
+      assert.deepEqual(visual,{color:'rgb(255, 107, 61)',background:'rgb(28, 33, 44)',size:'17px',weight:'700',
         detailColor:'rgb(230, 233, 239)',detailText:'再按一次可直接登出，未上傳的紀錄可能遺失',separate:true,
         border:'4px',radius:'0px',display:'block',fits:true,pageFits:true},`${entry.name} ${width}px`);
       const luminance = rgb => rgb.map(x=>x/255).map(x=>x<=0.04045?x/12.92:((x+0.055)/1.055)**2.4)
@@ -130,13 +131,13 @@ for(const entry of entries) {
     assert.equal(writes.length,1);
     assert.match(writes[0].path,new RegExp('/attempts/'+uid+'_4_0$'));
     assert.equal(writes[0].data.uid,uid);
-    await page.click(entry.button);await out(page,entry);
+    await clickLogout(page,entry.button);await out(page,entry);
   });
   test(`${entry.name}：待送連按兩次可直接登出`,async t=>{
     const page=await pageFor(t,entry);await pending(page);
-    await page.click(entry.button);
+    await clickLogout(page,entry.button);
     assert.match(await page.locator(entry.notice).innerText(),/再按一次/);
-    await page.click(entry.button);await out(page,entry);
+    await clickLogout(page,entry.button);await out(page,entry);
     assert.equal(await page.evaluate(()=>window.__hintWriteDone),undefined,'沒有等待卡住的上傳');
     await page.evaluate(()=>__hintRelease());
     await page.waitForFunction(()=>window.__hintWriteDone);
@@ -147,7 +148,7 @@ for(const entry of entries) {
       assert.equal(await page.evaluate(selector=>{
         document.querySelector(selector).click();return YBS.profile()===null;
       },entry.button),true,'原流程同步撤銷本機身分');
-    } else await page.click(entry.button); // 原本下載入口就有 400ms 延遲。
+    } else await clickLogout(page,entry.button); // 原本下載入口就有 400ms 延遲。
     await out(page,entry);
     assert.equal(await page.getByText('紀錄上傳中，請稍候再登出',{exact:false}).count(),0);
   });

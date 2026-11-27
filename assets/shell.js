@@ -9,13 +9,18 @@
 // 相容既有演出型活動：round.confirmations=1 表示 check 已自行檢查兩組資料；
 // round.manualAttempt=true 時，由 view 的 api.attempt() 在演出開始時記次。
 // cfg.progressLength（預設 6）、rememberIdentity（預設 false）保留舊頁儲存形狀。
+// cfg.progressVersion（選用）隔離本機練習進度；無版本的雲端紀錄僅作歷史，不抵免新版。
 // 過關規則：累積答對兩組不同的資料。答錯可同題修改且不扣分；答對後按「下一組」換題，每組最多計一次。
 // 活動頁與教師頁共用計分；不寫入既有過關紀錄或雲端欄位。
 const activityScore = (passed, total) => passed <= 0 || total <= 0 ? 0
   : Math.max(0, 100 - 10 * Math.max(0, total - passed));
-const shellTitle = cfg => {
+const shellTermWeek = cfg => {
   const activity = typeof ACTIVITIES !== 'undefined' ? ACTIVITIES.find(a => a.course === cfg.course && a.week === cfg.week) : null;
   const week = cfg.termWeek ?? (activity && typeof termWeekOf === 'function' ? termWeekOf(activity) : null);
+  return week;
+};
+const shellTitle = cfg => {
+  const week = shellTermWeek(cfg);
   return week ? `第 ${week} 週｜${cfg.title}` : cfg.title;
 };
 // 從 shell 同目錄載入核心，沿用靜態頁 CSP；HTML 只需更新 shell 快取版本。
@@ -40,13 +45,18 @@ const SHELL = (cfg) => {
     inst: null, handle: null, streak: 0, teacher: false, done: new Set(), previousKey: null, ident: null,
     identityGeneration: 0, identityRevoked: false, accountUid: null };
   shellCreateInterface(s);
-  if (typeof document.createElement === 'function') import('/ybs-old/assets/warmup.js?v=20261105w1').then(m => m.mountWarmup({cfg, main: $('main')})).catch(() => {});
+  s.header = shellCreateHeader(s);
+  if (typeof document.createElement === 'function') import('/ybs-old/assets/warmup.js?v=20261105w1').then(m => {
+    s.mountWarmup = () => { if (!s.warmupMounted && !$('main').hidden) { m.mountWarmup({cfg, main: $('main')}); s.warmupMounted = true; } };
+    s.mountWarmup();
+  }).catch(() => {});
   s.prog = { mask: 0, tries: Array(cfg.progressLength ?? 6).fill(0), time: Date.now() };
   Object.assign(s, shellCreateHints(s));
   Object.assign(s, shellCreateRoundFlow(s), shellCreateJudging(s), shellCreateProgress(s));
   s.xp = shellCreateXP(s);
   shellBindIdentityForm(s);
   Object.assign(s, shellCreateIdentity(s), shellCreateTeacher(s), shellCreateLogin(s), shellCreateSync(s));
+  s.renderRounds();
   if (TEACHER.remembered()) s.enterTeacher(); else if (loginEnabled()) s.showLogin(); else { $('g-login').hidden = true; $('g-form').hidden = false; $('in-cls').focus(); }
   // 測試用：讓自動檢查可以拿到目前這一組資料與答案
   return { get inst() { return s.inst }, get handle() { return s.handle }, load: s.load, setLevel: s.setLevel, get ri() { return s.ri }, rounds: s.R };
@@ -94,21 +104,37 @@ const shellGateHTML = (cfg, esc) => {
 
 // 建立活動、教師工具與進度的介面。
 const shellMainHTML = (cfg, esc) => {
-  return `<div class="wrap" id="main" hidden>
-  <header class="top">
-    <div class="activity-heading">
-      <div class="title-rounds"><h1>${esc(shellTitle(cfg))}</h1><nav class="rounds" id="rounds" aria-label="關卡"></nav></div>
-      <div class="who-bar"><a href="../../" class="linkbtn">← YBS Lab</a><span><b id="who"></b></span><button class="linkbtn" id="b-swap" type="button">不是我？換人</button><span class="upload-status" aria-live="polite"><span class="sync" id="sync" hidden></span><button class="sync warn" id="b-retry" type="button" hidden>重試上傳</button></span></div>
+  const week = shellTermWeek(cfg);
+  return `<div class="wrap shell-header-wrap" id="shell-header-home">
+  <header class="top" id="activity-header">
+    <div class="header-bar">
+      <a href="../../" class="linkbtn header-back">← YBS Lab</a>
+      <div class="header-account">
+        <aside class="xp-header" id="xp-header" hidden aria-live="polite">
+          <a href="../me/" id="xp-link" title="查看我的成長紀錄"><b id="xp-level"></b><span class="xp-wide">｜<span class="xp-mono" id="xp-total"></span></span></a>
+        </aside>
+        <button class="header-login" id="b-header-login" type="button">登入</button>
+        <details class="account" id="account" hidden>
+          <summary id="account-toggle" aria-label="帳號選單"><span class="account-avatar" id="account-avatar" aria-hidden="true"></span><span class="account-name" id="account-name"></span></summary>
+          <div class="account-menu" id="account-menu">
+            <div class="account-info"><b id="who"></b><p id="account-info"></p></div>
+            <div id="xp-detail" hidden aria-live="polite"><p id="xp-title" class="small"></p><progress id="xp-progress" max="1" value="0" aria-label="升級進度"></progress><p class="small" id="xp-next"></p></div>
+            <p class="small xp-login-hint" id="xp-login-hint" hidden>用帳號登入就能累積等級</p>
+            <a class="account-action" id="account-growth" href="../me/">成長紀錄</a>
+            <button class="account-action" id="b-swap" type="button">不是我？換人</button>
+            <button class="account-action" id="b-logout" type="button">登出</button>
+          </div>
+        </details>
+      </div>
     </div>
-    <aside class="xp-header" id="xp-header" hidden aria-live="polite">
-      <a href="../me/" id="xp-link" title="查看我的成長紀錄">
-        <b id="xp-level"></b><span class="xp-mono" id="xp-total"></span>
-        <progress id="xp-progress" max="1" value="0" aria-label="升級進度"></progress>
-        <span class="small" id="xp-next"></span>
-      </a>
-      <p class="small xp-login-hint" id="xp-login-hint" hidden>用帳號登入就能累積等級</p>
-    </aside>
-  </header>
+    <div class="upload-status" aria-live="polite"><span class="sync" id="sync" hidden></span><button class="sync warn" id="b-retry" type="button" hidden>重試上傳</button></div>
+    <div class="activity-week" ${week ? '' : 'hidden'}>${week ? '第 ' + esc(week) + ' 週' : ''}</div>
+    <h1>${esc(cfg.title)}</h1>
+    <p class="activity-subtitle" id="activity-subtitle" aria-live="polite"><b id="current-round-number">第 1 關</b><span id="current-round-name">${esc(cfg.rounds[0]?.name || '')}</span></p>
+    <nav class="rounds" id="rounds" aria-label="關卡"></nav>
+  </header></div>
+  ${shellGateHTML(cfg, esc)}
+  <div class="wrap" id="main" hidden>
   <section class="sec" id="task-instructions">
     <h2 class="sec-h"><span class="num">1</span>任務說明</h2>
     <div class="order" id="says" aria-live="polite"></div>
@@ -144,7 +170,44 @@ const shellMainHTML = (cfg, esc) => {
 // 插入共用介面。
 const shellCreateInterface = (s) => {
   const { cfg, esc } = s;
-  document.body.insertAdjacentHTML('afterbegin', shellGateHTML(cfg, esc) + shellMainHTML(cfg, esc));
+  document.body.insertAdjacentHTML('afterbegin', shellMainHTML(cfg, esc));
+};
+
+// 帳號選單只呈現既有身分；所有離開動作交給原本 b-swap 的待送／登出流程。
+const shellCreateHeader = s => {
+  const {$} = s, account = $('account'), toggle = $('account-toggle');
+  const root = document.documentElement || document.body;
+  const close = (focus = false) => { account.open = false; if (focus) toggle.focus(); };
+  root.addEventListener('keydown', e => { if (e.key === 'Escape' && account.open) { e.preventDefault(); close(true); } });
+  root.addEventListener('click', e => { if (!e.target.closest('#account')) close(); });
+  $('b-logout').onclick = () => $('b-swap').click();
+  $('b-header-login').onclick = () => {
+    $('gate').scrollIntoView({block:'start'});
+    const first = !$('g-form').hidden ? $('in-cls') : !$('g-who').hidden ? $('g-isme')
+      : $('g-gbtn').querySelector('input') || $('g-gbtn').querySelector('button') || $('g-manual');
+    first.focus();
+  };
+  function render() {
+    close();
+    const active = s.teacher || !!s.ident;
+    // 進入活動後保留 #main 祖先，沿用演出頁的換關／換人事件守門。
+    const header = $('activity-header'), home = $('shell-header-home');
+    if (active) $('main').prepend(header); else home.append(header);
+    home.hidden = active;
+    if (active) s.mountWarmup?.();
+    account.hidden = !active; $('b-header-login').hidden = active;
+    $('account-growth').hidden = s.teacher; $('b-logout').hidden = s.teacher;
+    if (!active) { $('account-name').textContent = ''; $('account-info').textContent = ''; return; }
+    const student = !s.teacher && !!s.accountUid;
+    const label = s.teacher ? '教師模式' : s.ident.cls + ' 班 ' + s.ident.seat + ' 號' + (student ? '' : '（待審）');
+    $('account-avatar').textContent = s.teacher ? '師' : student ? '生' : '訪';
+    $('account-name').textContent = label;
+    toggle.setAttribute('aria-label', label + '，帳號選單');
+    $('account-info').textContent = s.teacher ? '教師示範：不送出成績' : student ? '已登入：學號登入' : '班座訪客：作答送出後需老師審核才計入';
+    $('b-swap').textContent = s.teacher ? '登出教師模式' : '不是我？換人';
+  }
+  render();
+  return {render, close};
 };
 
 // 提示只存在本次操作的記憶體，不加入進度、成績或上傳欄位。
@@ -273,13 +336,15 @@ const shellCreateXP = s => {
   const snapshot = records => typeof YBSXP !== 'undefined' ? YBSXP.calculate(catalog(), records) : null;
   function render() {
     const header = $('xp-header');
-    if (!header || !s.ident || s.teacher) { if (header) header.hidden = true; return; }
-    header.hidden = false;
+    if (!header || !s.ident || s.teacher) { if (header) header.hidden = true; $('xp-detail').hidden = true; $('xp-login-hint').hidden = true; return; }
+    header.hidden = !owner;
+    $('xp-detail').hidden = !owner;
     $('xp-link').hidden = !owner;
     $('xp-login-hint').hidden = !!owner;
     if (!owner) return;
     const result = ready && snapshot(cloud);
-    $('xp-level').textContent = result ? 'Lv ' + result.level + ' ' + result.title : '成長紀錄';
+    $('xp-level').textContent = result ? 'Lv ' + result.level : '成長紀錄';
+    $('xp-title').textContent = result ? result.title : '';
     $('xp-total').textContent = result ? result.totalXP + ' XP' : '載入中…';
     $('xp-progress').hidden = !result;
     if (result) $('xp-progress').value = result.progress;
@@ -303,6 +368,7 @@ const shellCreateXP = s => {
   function stop() {
     generation++; readGeneration++; owner = null; ready = false; cloud = []; pending.clear();
     if ($('xp-header')) $('xp-header').hidden = true;
+    $('xp-detail').hidden = true; $('xp-login-hint').hidden = true;
   }
   async function refresh() {
     if (!owner || typeof YBS.firebaseSession !== 'function') return;
@@ -350,8 +416,30 @@ const shellCreateRoundFlow = (s) => {
   const seed = () => { let s = (Math.random() * 2 ** 31) >>> 0 || 1; return () => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s / 4294967296 } };
   // 按原順序顯示所有關卡與已完成標記。
   function renderRounds() {
-    $('rounds').innerHTML = R.map((r, i) => '<button type="button" class="' + (s.done.has(i) ? 'passed' : '') + '" data-i="' + i + '" aria-pressed="' + (i === s.ri) + '">' + esc(r.name) + (s.done.has(i) ? ' <span class="done" aria-hidden="true">✓</span><span class="shell-sr-only"> 已過關</span>' : '') + '</button>').join('');
-    $('rounds').querySelectorAll('button').forEach(b => b.onclick = () => load(+b.dataset.i));
+    $('current-round-number').textContent = '第 ' + (s.ri + 1) + ' 關'; $('current-round-name').textContent = R[s.ri].name;
+    $('rounds').innerHTML = R.map((r, i) => {
+      const label = '第 ' + (i + 1) + ' 關', full = label + '：' + r.name + (s.done.has(i) ? '（已過關）' : '');
+      return '<button type="button" class="' + (s.done.has(i) ? 'passed' : '') + '" data-i="' + i + '" aria-pressed="' + (i === s.ri) + '" title="' + esc(full) + '" aria-label="' + esc(full) + '"><span class="round-depth" aria-hidden="true"></span>' + label + '</button>';
+    }).join('');
+    $('rounds').querySelectorAll('button').forEach(b => {
+      b.disabled = !s.ident && !s.teacher;
+      b.onclick = () => load(+b.dataset.i);
+      // 觸控瀏覽器不一定在接觸期間套用 :active；以 Pointer Events 提供一致的按下回饋。
+      // 保留原生點擊與捲動，放開、捲動取消、離開及失去捕捉時都清除暫態。
+      let pressing = null;
+      b.onpointerdown = e => {
+        if (b.disabled || !e.isPrimary || e.button !== 0) return;
+        pressing = e.pointerId;
+        b.classList.add('is-pressing');
+      };
+      const release = e => {
+        if (e.pointerId !== pressing) return;
+        pressing = null;
+        b.classList.remove('is-pressing');
+      };
+      b.onpointerup = b.onpointercancel = b.onpointerleave = b.onlostpointercapture = release;
+      b.onblur = () => { pressing = null; b.classList.remove('is-pressing'); };
+    });
   }
   // 顯示累積答對的組數；保留 streak 名稱相容舊計數。
   function renderStreak() {
@@ -475,7 +563,7 @@ const shellCreateJudging = (s) => {
 // 保存既有進度。
 const shellCreateProgress = (s) => {
   const { cfg, $ } = s;
-  const KEY = () => s.ident ? 'it9:w' + cfg.week + ':' + s.ident.cls + '-' + s.ident.seat : null;
+  const KEY = () => s.ident ? 'it9:w' + cfg.week + ':' + s.ident.cls + '-' + s.ident.seat + (cfg.progressVersion ? ':' + cfg.progressVersion : '') : null;
   // 保存班座進度。
   function saveProg() { if (!s.ident || s.isIdentityCurrent?.() === false) return; try { localStorage.setItem(KEY(), JSON.stringify(s.prog)); localStorage.setItem('it9:last', JSON.stringify(cfg.rememberIdentity ? s.ident : { cls: s.ident.cls, seat: s.ident.seat })) } catch (e) { $('sync').hidden = false; $('sync').className = 'sync warn'; $('sync').textContent = '這台電腦沒辦法存下進度（瀏覽器不允許）。重新整理後過關紀錄可能遺失，請保留頁面並重試上傳，確認老師已收到。' } }
   return { progressKey: KEY, saveProg };
@@ -526,10 +614,12 @@ const shellCreateIdentity = (s) => {
     $('g-whotext').textContent = ''; $('g-isme').onclick = null;
     $('g-me').textContent = ''; $('g-me').hidden = true; $('g-confirm').textContent = '';
     $('g-back').click(); $('in-cls').value = ''; $('in-seat').value = ''; $('gerr').textContent = '';
-    s.renderRounds(); s.renderStreak();
+    s.renderRounds(); s.renderStreak(); s.header.render();
   }
   // 共用 XP 已確認的本人雲端紀錄，只補上本活動過關位元，不動本機待送與作答次數。
   function restoreCloudProgress(records) {
+    // 舊站 attempts 無活動版本；選用新版練習進度的活動不能以歷史紀錄抵免。
+    if (cfg.progressVersion) return;
     const before = s.prog.mask;
     for (const r of records) {
       if (r.activity !== cfg.week || !Number.isInteger(r.round) || r.round < 0 || r.round >= R.length) continue;
@@ -553,7 +643,7 @@ const shellCreateIdentity = (s) => {
     if (loginEnabled() && YBS.profile()) { try { sessionStorage.setItem('ybslab:me:' + YBS.profile().email, JSON.stringify({ cls: id.cls, seat: id.seat })) } catch (e) { } $('sync').hidden = false; YBS.flush() }
     else if (loginEnabled()) { $('sync').hidden = false; YBS.guest(id); }
     $('gate').hidden = true; $('main').hidden = false;
-    s.xp?.start();
+    s.xp?.start(); s.header.render();
     s.setLevel(1);
   }
   $('b-swap').onclick = () => {
@@ -576,7 +666,7 @@ const shellCreateTeacher = (s) => {
     s.teacher = true; TEACHER.remember(true); s.ident = null; s.done.clear();
     $('who').textContent = '教師模式'; $('b-swap').textContent = '登出教師模式';
     $('sync').hidden = true; $('b-retry').hidden = true; $('tbar').hidden = false; $('gate').hidden = true; $('main').hidden = false;
-    s.setLevel(1);
+    s.header.render(); s.setLevel(1);
   }
   $('t-show').onclick=()=>{const i=$('in-tcode'),s=i.type==='password';i.type=s?'text':'password';$('t-show').textContent=s?'隱藏通行碼':'顯示通行碼'};
   $('t-open').onclick = () => { $('t-box').hidden = !$('t-box').hidden; if (!$('t-box').hidden) $('in-tcode').focus() };
